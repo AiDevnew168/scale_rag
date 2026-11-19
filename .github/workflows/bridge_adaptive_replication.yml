@@ -1,0 +1,31 @@
+name: Hard-capped adaptive replication after workload shift
+on:
+  push:
+    paths:
+      - 'research/bridge_partition/adaptive_replication.py'
+      - '.github/workflows/bridge_adaptive_replication.yml'
+  workflow_dispatch:
+jobs:
+  replicate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        family: [bridge_chain, synthesis]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy==2.1.3 pymetis==2025.2.2
+      - name: Evaluate observed-only adaptive copy placement
+        env:
+          ONLINE_SOURCE: ${{ matrix.family }}
+        run: python research/bridge_partition/adaptive_replication.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: adaptive-replication-${{ matrix.family }}
+          path: results_replication_${{ matrix.family }}/
+          if-no-files-found: warn
