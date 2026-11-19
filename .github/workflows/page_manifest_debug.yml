@@ -1,0 +1,20 @@
+name: Debug original page-image manifest identifiers
+on:
+  push:
+    paths: ['.github/workflows/page_manifest_debug.yml']
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          python - <<'PY'
+          import json,re,urllib.request
+          u='https://huggingface.co/datasets/diandianone123/topographrag-bench/resolve/main/manifest.json'
+          m=json.load(urllib.request.urlopen(u))
+          for idx in (0,113):
+            d=m['documents'][idx]
+            files=d['files']['page_images']
+            print('INDEX',idx,'ACTUAL_DOC_ID',d['doc_id'],'NUMBER',len(files),'EXAMPLES',files[:4],files[-4:])
+            im={int(x.group(1)):p for p in files if (x:=re.search(r'_(\d+)\.(?:jpg|jpeg|png)$',p,re.I))}
+            print('MAPPING',len(im),sorted(im)[:10], sorted(im)[-8:])
+          PY
