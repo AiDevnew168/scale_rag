@@ -1,0 +1,24 @@
+name: December novel workload concentration diagnostic
+on:
+  push:
+    paths:
+      - 'research/bridge_partition/novel_december_diagnostic.py'
+      - '.github/workflows/bridge_december_diagnostic.yml'
+jobs:
+  concentration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy==2.1.3 scikit-learn==1.6.1 pymetis==2025.2.2 mtkahypar==1.7.1
+      - name: Real December pattern concentration and unique-pattern audit
+        run: python research/bridge_partition/novel_december_diagnostic.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wikidata-december-concentration
+          path: results_december_diagnostic/
+          if-no-files-found: warn
