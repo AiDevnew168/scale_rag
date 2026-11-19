@@ -17,6 +17,8 @@ from sklearn.preprocessing import StandardScaler
 
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 import pilot
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "topo_fea"))
+import audit
 SEED=271119;OUT=Path("results_doc_heldout");OUT.mkdir(exist_ok=True)
 RNG=random.Random(SEED)
 K=4
@@ -161,7 +163,7 @@ def main():
             "https://huggingface.co/datasets/diandianone123/topographrag-bench/resolve/main/archives/layout_content.tar.zst",
             archive)
     print("LAYOUT_ARCHIVE_SHA256",hashlib.sha256(archive.read_bytes()).hexdigest(),flush=True)
-    layouts,stats=pilot.text_layouts(archive,m)
+    layouts,stats=audit.text_layouts(archive,m)
     contents={doc:pages_by_doc(layouts[doc],n_pages[doc]) for doc in docs}
     vectorizer=TfidfVectorizer(stop_words="english",min_df=2,
             max_features=20000,sublinear_tf=True)
