@@ -1,0 +1,25 @@
+name: Independent August 28-day Wikidata hypergraph migration confirmation
+on:
+  push:
+    paths:
+      - 'research/bridge_partition/august_confirm.py'
+      - '.github/workflows/wikidata_august_confirm.yml'
+  workflow_dispatch:
+jobs:
+  august:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy==2.1.3 pymetis==2025.2.2 scikit-learn==1.6.1 mtkahypar==1.7.1
+      - name: Evaluate independently later August request-log partition family
+        run: python research/bridge_partition/august_confirm.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wikidata-august-independent-gate
+          path: results_wikidata_aug_confirm/
+          if-no-files-found: warn
