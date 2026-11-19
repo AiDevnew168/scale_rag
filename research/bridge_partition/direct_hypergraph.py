@@ -46,10 +46,12 @@ def hypergraph_partition(n, training, k, *, query_weight=400, objective="KM1"):
     return labels
 
 def split_workload(group, rng):
+    # Must reject tiny docs BEFORE RNG shuffle, exactly as pilot.py does;
+    # otherwise later train/test splits drift even with the same seed.
+    if len(group)<4:return None
     q=sorted(group,key=lambda q:q.get("mh_id") or q.get("sq_id") or "")
     rng.shuffle(q)
     if MODE=="random":
-        if len(q)<4:return None
         cut=max(2,min(len(q)-2,round(.6*len(q))))
         return q[:cut],q[cut:]
     source,target=(("bridge_chain","synthesis") if MODE=="bridge_to_synthesis"
