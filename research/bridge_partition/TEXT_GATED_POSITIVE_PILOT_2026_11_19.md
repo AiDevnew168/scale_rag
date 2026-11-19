@@ -49,3 +49,9 @@ Together, the two groups give frozen 74/207=35.749%; query-gated 85/207=41.063%;
 **GO for an independent, prospective replication of the query-topology-aware online placement policy with measured migration overhead and strong adaptive routing/replication baselines. NOT GO for a journal-paper novelty claim yet.**
 
 A stricter next experiment should freeze this exact policy before selecting entirely new documents and a second benchmark, compare with no-migration adaptive routing and simple replication, and measure end-to-end wall-clock latency/byte movement, not only oracle minimum active shards. If the positivity vanishes under equal real overhead or stronger baselines, stop this formulation. Do not revert to repeating MCF-vs-Cross-Encoder top-k evidence selection.
+
+## Final actual migration-cost audit (same workflow, fixed method)
+
+Audited run: https://github.com/AiDevnew168/scale_rag/actions/runs/44529914877
+
+The exact same gated policy moved two pages in one of the 25 bridge-to-synthesis documents (2 pages moved, zero aggregate shard activations saved) and moved two pages in each of the 20 synthesis-to-bridge documents (40 pages moved, 11 shard activations saved over 114 queries). Across the 207 evaluated queries, total page moves = **42**, net saved activated shards = **11**, or **3.818 page moves per saved shard activation** in this limited batch. A bare activation-count benefit does NOT demonstrate wall-clock cost savings: net usefulness depends on the byte-size of pages, migration traffic, routing setup costs, batch recurrence, concurrent queries and whether copying can replace moving. A real break-even test must compare the measured cost of 42 page moves with 11 saved shard activations and consider static request routing without moving data. Reported move ratio has no assumed bytes/latency units.
