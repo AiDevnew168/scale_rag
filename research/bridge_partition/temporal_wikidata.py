@@ -96,10 +96,11 @@ def paired_day_ci(rows,a,b):
     byday=defaultdict(list)
     for d,q in rows:byday[d].append(q)
     days=sorted(byday)
+    numerators={day:sum((len({a[x] for x in q})==1)-(len({b[x] for x in q})==1)
+                        for q in byday[day]) for day in days}
+    lengths={day:len(byday[day]) for day in days}
     def diff(picked):
-        obs=[q for day in picked for q in byday[day]]
-        return 100*sum((len({a[x] for x in q})==1)-(len({b[x] for x in q})==1)
-                       for q in obs)/len(obs)
+        return 100*sum(numerators[day] for day in picked)/sum(lengths[day] for day in picked)
     boots=[diff([rng.choice(days) for _ in days]) for _ in range(3000)]
     return {"delta_local_pp":round(diff(days),3),
        "day_block_ci95_pp":list(map(lambda v:round(float(v),3),
