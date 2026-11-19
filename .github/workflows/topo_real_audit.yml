@@ -1,0 +1,27 @@
+name: TopoGraphRAG real 300-question retrieval headroom audit
+on:
+  push:
+    paths:
+      - 'research/topo_fea/audit.py'
+      - '.github/workflows/topo_real_audit.yml'
+  workflow_dispatch:
+jobs:
+  experiment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned experiment dependencies
+        run: pip install numpy==2.1.3 scikit-learn==1.6.1 zstandard==0.23.0
+      - name: Execute blind real-layout retrieval experiment
+        run: python research/topo_fea/audit.py
+      - name: Archive immutable empirical results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: topo-audit-results
+          path: results/
+          if-no-files-found: warn
