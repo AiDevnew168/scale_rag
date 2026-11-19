@@ -1,0 +1,31 @@
+name: One-swap oracle diagnostic headroom
+on:
+  push:
+    paths:
+      - 'research/bridge_partition/one_swap_oracle.py'
+      - '.github/workflows/bridge_one_swap_oracle.yml'
+  workflow_dispatch:
+jobs:
+  oracle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        family: [bridge_chain, synthesis]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy==2.1.3 pymetis==2025.2.2
+      - name: Measure exact one-swap retrospective oracle (diagnostic ONLY)
+        env:
+          ONLINE_SOURCE: ${{ matrix.family }}
+        run: python research/bridge_partition/one_swap_oracle.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: one-swap-oracle-${{ matrix.family }}
+          path: results_swap_oracle_${{ matrix.family }}/
+          if-no-files-found: warn
