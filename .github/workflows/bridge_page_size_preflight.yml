@@ -1,0 +1,20 @@
+name: Real page-image physical-byte accessibility
+on:
+  push:
+    paths: ['.github/workflows/bridge_page_size_preflight.yml']
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: |
+          python - <<'PY'
+          import urllib.request
+          paths=['page_images/PH_2016.06.08_Economy-Final_0.jpg','archives/page_images.tar.zst']
+          root='https://huggingface.co/datasets/diandianone123/topographrag-bench/resolve/main/'
+          for path in paths:
+             try:
+               r=urllib.request.urlopen(urllib.request.Request(root+path,method="HEAD"),timeout=25)
+               print('OBJECT',path,'status',r.status,'bytes',r.headers.get('Content-Length'),'resolved_url',r.url[:110])
+             except Exception as e:print('OBJECT_ERROR',path,type(e).__name__,str(e)[:150])
+          PY
