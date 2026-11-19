@@ -15,6 +15,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sentence_transformers import SentenceTransformer
+from huggingface_hub import model_info
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 import pilot
 import document_transfer as dt
@@ -24,7 +25,7 @@ import audit
 SEED=271119
 OUT=Path("results_dense_transfer");OUT.mkdir(exist_ok=True)
 MODEL="sentence-transformers/all-MiniLM-L6-v2"
-REVISION="c9745ed1d9f207416be6d2e6f8de32d1f16199b1" # verify actual resolver, fail if unavailable
+REVISION=None # resolved from official Hugging Face registry before loading
 
 def all_page_vectors(text_by_doc,doc_order):
     model=SentenceTransformer(MODEL,device="cpu",revision=REVISION)
@@ -95,6 +96,10 @@ def main():
     vectorizer=TfidfVectorizer(stop_words="english",min_df=2,max_features=20000,sublinear_tf=True)
     vectorizer.fit([p for doc in train for p in content[doc]])
     # Pretrained dense encoder is frozen: no gold supervision or tuning.
+    global REVISION
+    REVISION=model_info(MODEL).sha
+    print("ENCODER_RESOLVED_SHA",REVISION,flush=True)
+    assert len(REVISION)==40
     D=all_page_vectors(content,docs)
     Xold=[];Xnew=[];yy=[]
     rng=random.Random(SEED)
