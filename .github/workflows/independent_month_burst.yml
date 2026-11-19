@@ -1,0 +1,32 @@
+name: Independent Jan-Feb 2018 frozen day0 burst policy confirmation
+on:
+  push:
+    paths:
+      - 'research/bridge_partition/independent_month_burst.py'
+      - '.github/workflows/independent_month_burst.yml'
+  workflow_dispatch:
+jobs:
+  frozen-policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        month: [january, february]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install fixed conventional partitioner dependencies
+        run: pip install numpy==2.1.3 pymetis==2025.2.2 scikit-learn==1.6.1 mtkahypar==1.7.1
+      - name: Run locked December-origin day0 policy on independent later calendar month
+        env:
+          HOT_MONTH: ${{ matrix.month }}
+        run: python research/bridge_partition/independent_month_burst.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: independent-hot-${{ matrix.month }}
+          path: results_independent_hot_${{ matrix.month }}/
+          if-no-files-found: warn
