@@ -20,7 +20,7 @@ jobs:
                   if m.isfile() and m.name.endswith('.jsonl'):
                     print('MEMBER',m.name,'SIZE',m.size)
                     ff=t.extractfile(m)
-                    lines=io.TextIOWrapper(ff,encoding='utf-8')
+                    lines=ff.read().decode('utf-8',errors='replace').splitlines()
                     for idx,line in enumerate(lines):
                       if idx==2:break
                       j=json.loads(line)
