@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Train-only minimax portfolio selection over EXISTING Mt-KaHyPar hypergraph partitions.
+"""Train-only minimax portfolio selection over EXISTING Mt-KaHyPar hypergraph partitions.\n\nAll candidates now use a per-instance fixed partitioner seed regardless of evaluation order.
 
 Exploratory robustness control, not a proposed novel graph algorithm.
 Source questions and gold TRAIN pages are used for placement; test gold ONLY scores outcomes.
