@@ -91,7 +91,7 @@ def main():
         import urllib.request
         urllib.request.urlretrieve(pilot.ROOT+"archives/layout_content.tar.zst",archive)
     source,stats=audit.text_layouts(archive,man)
-    rows=[];included=[];warnings=Counter();topology_correct=Counter()
+    rows=[];included=[];warnings=Counter();topology_correct=Counter();movement=Counter()
     for d in sorted(group):
         n=n_pages[d]
         if not 20<=n<=39:continue
@@ -118,6 +118,10 @@ def main():
             predicted_rate=float(np.mean(predicted_bridge))
             do_prefetch=predicted_rate>=.5
             gated=prefetch3 if do_prefetch else original
+            movement["gated_changed_docs"]+=int(gated!=original)
+            movement["gated_page_moves"]+=sum(a!=b for a,b in zip(gated,original))
+            movement["prefetch3_changed_docs"]+=int(prefetch3!=original)
+            movement["prefetch3_page_moves"]+=sum(a!=b for a,b in zip(prefetch3,original))
             topology_correct["n_batches"]+=1
             topology_correct["n_correct_batches"]+=int(
                 do_prefetch==(TARGET=="bridge_chain"))
@@ -143,6 +147,9 @@ def main():
       "mode":MODE+"_to_"+TARGET,
       "n_docs":len(included),"n_queries":len(rows),
       "topology_prediction_counts":dict(topology_correct),
+      "migration_diagnostics":dict(movement),
+      "saved_shard_activations_gated_vs_static":sum(r["static"]-r["topology_gated"] for r in rows),
+      "page_moves_per_saved_activation":round(movement["gated_page_moves"]/max(1,sum(r["static"]-r["topology_gated"] for r in rows)),3),
       "classifier_train_questions":len(train_questions),
       "classifier_train_documents":len(set(q["doc_id"] for q in train_questions)),
       "means":{m:previous.test_stats(rows,m) for m in methods},
