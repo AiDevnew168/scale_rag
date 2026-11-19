@@ -87,3 +87,8 @@ A separate five-shard parallel rerun on the same original 300 questions, using f
 https://github.com/AiDevnew168/scale_rag/actions/runs/44503581998
 
 Its aggregate independent fingerprint/same-question checks reproduced TF-IDF Full@6 = **33.000%**, CE Full@6 = **33.333%**, CE mean evidence Recall@6 = **60.144%**, and paired CE vs TF-IDF Delta = **+0.333 pp** with the same document-cluster CI **[-5.034,+5.883] pp**. This establishes computational reproducibility across job sharding. It is NOT a statistically independent replication, because all 300 queries and model weights were unchanged.
+
+
+## Addendum: independent real-edge structural experiment, November 19
+
+The narrower structural-compatibility hypothesis was tested on an *auxiliary* human-labeled document-edge dataset, FUNSD, rather than repeating RAG Top-k ranking. See [STRUCTURAL_RELATION_GATE_2026_11_19.md](STRUCTURAL_RELATION_GATE_2026_11_19.md), [real edge experiment](https://github.com/AiDevnew168/scale_rag/actions/runs/44511093908), and [exact gold-flow capacity ceiling](https://github.com/AiDevnew168/scale_rag/actions/runs/44511476885). On held-out 50 documents with 837 true edges, Greedy cap1 achieved F1 .78035 and exact min-cost Flow cap1 .77498 (delta -0.537 pp, document-bootstrap CI95 [-1.608,+.149]). Greedy recovered 572 of the 595 gold links retainable under that capacity. The benchmark has substantial actual degree violations (24/50 forms cannot retain all true links under cap1). This is **not direct RAG evidence**. Together with the insufficient TopoGraphRAG pairwise relation labels, it supports **NO-GO for developing candidate A further on current evidence**, rather than a claim that the broader semantic graph problem is solved.
