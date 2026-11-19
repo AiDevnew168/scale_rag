@@ -121,7 +121,11 @@ def main():
                 "metis_frozen14","metis_bounded10pct","hyper_frozen14",
                 "hyper_bounded10pct","hyper_blended10pct")},
           "paired_hyper_frozen_vs_metis_frozen":r.day_bootstrap(
-              data,methods["hyper_frozen14"],methods["metis_frozen14"])}
+              data,methods["hyper_frozen14"],methods["metis_frozen14"]),
+          "paired_hyper_bounded_vs_hyper_frozen":r.day_bootstrap(
+              data,methods["hyper_bounded10pct"],methods["hyper_frozen14"]),
+          "paired_hyper_bounded_vs_metis_bounded":r.day_bootstrap(
+              data,methods["hyper_bounded10pct"],methods["metis_bounded10pct"])}
        for group,data in subgroups.items() if len(data)>100}
     migration={key:{"vs_metis_frozen14":r.optimal_label_moves(frozen_metis,part),
                     "vs_hyper_frozen14":r.optimal_label_moves(frozen_hyper,part)}
