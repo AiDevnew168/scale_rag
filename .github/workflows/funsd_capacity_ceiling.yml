@@ -1,0 +1,43 @@
+name: FUNSD gold relation capacity ceiling audit
+on:
+  push:
+    paths: ['.github/workflows/funsd_capacity_ceiling.yml']
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Install exact max-flow library
+        run: pip install networkx==3.4.2
+      - name: Compute real gold-link recall ceilings for each capacity
+        run: |
+          python - <<'PY'
+          import io,json,zipfile,urllib.request,networkx as nx,collections,hashlib
+          url='https://guillaumejaume.github.io/FUNSD/dataset.zip'
+          raw=urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0'}),timeout=90).read()
+          z=zipfile.ZipFile(io.BytesIO(raw))
+          allcounts=collections.Counter()
+          for name in sorted(z.namelist()):
+            if '__MACOSX' in name or '/testing_data/annotations/' not in name or not name.endswith('.json'):continue
+            es=json.loads(z.read(name))['form'];byid={e['id']:e for e in es}
+            qids={e['id'] for e in es if e.get('label')=='question' and len(e.get('box',[]))==4}
+            aids={e['id'] for e in es if e.get('label')=='answer' and len(e.get('box',[]))==4}
+            links=set()
+            for e in es:
+              for link in e.get('linking',[]):
+                if len(link)==2:links.add(tuple(sorted(link)))
+            gold={(q,a) for p in links for q,a in [p if p[0] in qids and p[1] in aids else (p[1],p[0])]
+                 if q in qids and a in aids}
+            allcounts['docs']+=1;allcounts['gold_edges']+=len(gold)
+            for cap in (1,2,3):
+              g=nx.DiGraph()
+              for q in qids:g.add_edge('s',('q',q),capacity=cap)
+              for a in aids:g.add_edge(('a',a),'t',capacity=cap)
+              for q,a in gold:g.add_edge(('q',q),('a',a),capacity=1)
+              val=nx.maximum_flow_value(g,'s','t') if gold else 0
+              allcounts['max_true_edges_cap'+str(cap)]+=val
+              if val<len(gold):allcounts['docs_gold_violates_cap'+str(cap)]+=1
+          print('ORACLE_CAPACITY_RESULT',json.dumps(dict(allcounts),sort_keys=True))
+          print('SOURCE_SHA256',hashlib.sha256(raw).hexdigest())
+          assert allcounts['docs']==50 and allcounts['gold_edges']==837
+          PY
