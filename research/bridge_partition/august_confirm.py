@@ -100,6 +100,29 @@ def main():
       ("metis_observed7_full","metis_frozen14"),
       ("hyper_bounded10pct","metis_bounded10pct")]
     paired={x+"_vs_"+y:r.day_bootstrap(test,methods[x],methods[y]) for x,y in pairs}
+    # A crucial no-frequency-inflation control: evaluate each query
+    # property-set at most once, plus entirely new property-set combinations.
+    # Novelty is among the SAME 120 train-selected predicates.
+    def distinct(rows):
+        seen=set();result=[]
+        for day,pp in rows:
+            if pp in seen:continue
+            seen.add(pp);result.append((day,pp))
+        return result
+    seen_previously={pp for _,pp in train+observed}
+    fresh=[(day,pp) for day,pp in test if pp not in seen_previously]
+    subgroups={"unique_future_patterns":distinct(test),
+       "future_patterns_unseen_in_train_and_feedback":fresh,
+       "unique_truly_new_future_patterns":distinct(fresh)}
+    subgroup_metrics={
+       group:{"n":len(data),
+          "methods":{name:r.eval_subset(data,part)
+              for name,part in methods.items() if name in (
+                "metis_frozen14","metis_bounded10pct","hyper_frozen14",
+                "hyper_bounded10pct","hyper_blended10pct")},
+          "paired_hyper_frozen_vs_metis_frozen":r.day_bootstrap(
+              data,methods["hyper_frozen14"],methods["metis_frozen14"])}
+       for group,data in subgroups.items() if len(data)>100}
     migration={key:{"vs_metis_frozen14":r.optimal_label_moves(frozen_metis,part),
                     "vs_hyper_frozen14":r.optimal_label_moves(frozen_hyper,part)}
                for key,part in methods.items()}
@@ -117,12 +140,14 @@ def main():
       "hard_migration_budget":budget,"actual_local_swap_moves":{
          "metis_bounded10pct":mmoved,"hyper_bounded10pct":hmoved,
          "hyper_blended10pct":hbmoved},
-      "metrics":metrics,"paired":paired,"minimum_label_aligned_moved_nodes":migration,
+      "metrics":metrics,"paired":paired,"subgroup_generalization":subgroup_metrics,
+      "minimum_label_aligned_moved_nodes":migration,
       "excluded_future_queries":excluded_test,
       "limitations":["Prospective independent later log file, but model family selection previously explored on older Wikidata periods",
          "Organic SPARQL predicate co-occurrence not natural-language GraphRAG question-answer quality",
          "120 predicates with equal node weights; not real KG triples, actual memory bytes or network latency",
          "Only questions mentioning 2-12 of selected historic predicates evaluated",
+         "Unique pattern subgroup is a set-of-predicates deduplication, not full SPARQL query identity",
          "One fixed 10pct migration budget; no full SWORD/WISE/WASP or more sophisticated dynamic baseline",
          "No future test query/answer information enters methods; tests only score predefined variants",
          "Bootstrap resamples 28 day-blocks and reflects only within-period temporal variability"]}
