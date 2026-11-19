@@ -1,0 +1,26 @@
+name: Threefold document-disjoint dense relation forecasting
+on:
+  push:
+    paths:
+      - 'research/bridge_partition/dense_crossval.py'
+      - '.github/workflows/bridge_dense_crossval.yml'
+  workflow_dispatch:
+jobs:
+  threefold:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install frozen experiment dependencies
+        run: pip install numpy==2.1.3 scipy==1.14.1 scikit-learn==1.6.1 pymetis==2025.2.2 zstandard==0.23.0 'sentence-transformers==3.4.1' 'transformers==4.49.0'
+      - name: Threefold document-held-out test
+        run: python research/bridge_partition/dense_crossval.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: threefold-document-disjoint-dense
+          path: results_dense_cv/
+          if-no-files-found: warn
