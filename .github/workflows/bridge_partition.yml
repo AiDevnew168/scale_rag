@@ -1,0 +1,27 @@
+name: Bridge-Preserving Partitioning Real Workload Pilot
+on:
+  push:
+    paths:
+      - 'research/bridge_partition/pilot.py'
+      - '.github/workflows/bridge_partition.yml'
+  workflow_dispatch:
+jobs:
+  held-out-page-shards:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned partitioner
+        run: pip install numpy==2.1.3 pymetis==2025.2.2
+      - name: Real document-sharding and held-out query-span comparison
+        run: python research/bridge_partition/pilot.py
+      - name: Preserve all results and split manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bridge-partition-heldout-pilot
+          path: results_bridge/
+          if-no-files-found: warn
