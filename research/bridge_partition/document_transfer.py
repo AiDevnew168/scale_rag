@@ -4,7 +4,7 @@
 All gold test supports are scorer-only. Input page contents/positions are visible.
 Real TopoGraphRAG layouts, not pixel image, entity KG or actual routing latency.
 """
-import hashlib,itertools,json,math,random,sys
+import hashlib,itertools,json,math,random,sys,urllib.request
 from collections import Counter,defaultdict
 from pathlib import Path
 import numpy as np
@@ -155,9 +155,13 @@ def main():
     ntr=round(.7*len(docs))
     train_docs=sorted(docs[:ntr]);test_docs=sorted(docs[ntr:])
     assert not set(train_docs)&set(test_docs)
-    layouts,stats=pilot.text_layouts(pilot.download(
-        "manifest.json") if False else __import__("audit").download(
-            "archives/layout_content.tar.zst","layouts.tar.zst"),m)
+    archive=Path("layouts.tar.zst")
+    if not archive.exists():
+        urllib.request.urlretrieve(
+            "https://huggingface.co/datasets/diandianone123/topographrag-bench/resolve/main/archives/layout_content.tar.zst",
+            archive)
+    print("LAYOUT_ARCHIVE_SHA256",hashlib.sha256(archive.read_bytes()).hexdigest(),flush=True)
+    layouts,stats=pilot.text_layouts(archive,m)
     contents={doc:pages_by_doc(layouts[doc],n_pages[doc]) for doc in docs}
     vectorizer=TfidfVectorizer(stop_words="english",min_df=2,
             max_features=20000,sublinear_tf=True)
