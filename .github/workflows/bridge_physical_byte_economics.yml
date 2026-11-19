@@ -31,3 +31,5 @@ jobs:
             results_text_prefetch_synthesis/report.json
             results_text_prefetch_synthesis/image_move_trace.json
           if-no-files-found: warn
+
+# Original image paths resolved by doc_id; stream only selected source JPG bytes.
