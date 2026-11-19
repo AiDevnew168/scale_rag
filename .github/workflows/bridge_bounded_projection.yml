@@ -1,0 +1,31 @@
+name: Bounded migration target projection under workload shift
+on:
+  push:
+    paths:
+      - 'research/bridge_partition/bounded_projection.py'
+      - '.github/workflows/bridge_bounded_projection.yml'
+  workflow_dispatch:
+jobs:
+  project:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        history: [bridge_chain, synthesis]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy==2.1.3 pymetis==2025.2.2
+      - name: Run strictly fixed 10pct migration projector against frozen placement
+        env:
+          ONLINE_SOURCE: ${{ matrix.history }}
+        run: python research/bridge_partition/bounded_projection.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bounded-projection-${{ matrix.history }}
+          path: results_projection_${{ matrix.history }}/
+          if-no-files-found: warn
