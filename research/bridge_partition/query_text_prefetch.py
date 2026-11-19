@@ -139,7 +139,7 @@ def main():
             import re
             image_map={}
             for file_path in man["documents"][d]["files"]["page_images"]:
-                matched=re.search(r"_(\\d+)\\.(?:jpg|jpeg|png)$",file_path,re.I)
+                matched=re.search(r"_(\d+)\.(?:jpg|jpeg|png)$",file_path,re.I)
                 if matched:image_map[int(matched.group(1))]=file_path
             assert all(p in image_map for p in move_indices),(d,move_indices)
             benefits=[len({original[p] for p in pilot.pages(q)})-
