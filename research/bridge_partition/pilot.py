@@ -5,7 +5,7 @@ NOT a new RAG retrieval model, not a distributed latency benchmark.
 Train gold supports are a proxy for historic successful query traces;
 test gold supports are ONLY used for evaluation.
 """
-import hashlib, itertools, json, math, random, statistics, urllib.request
+import hashlib, itertools, json, math, os, random, statistics, urllib.request
 from collections import Counter, defaultdict
 from pathlib import Path
 import numpy as np
@@ -13,7 +13,9 @@ import pymetis
 
 SEED = 261119
 ROOT = "https://huggingface.co/datasets/diandianone123/topographrag-bench/resolve/main/"
-OUT = Path("results_bridge"); OUT.mkdir(exist_ok=True)
+SCENARIO=os.environ.get("BRIDGE_SCENARIO","random")
+assert SCENARIO in ("random","bridge_to_synthesis","synthesis_to_bridge")
+OUT = Path("results_bridge_"+SCENARIO); OUT.mkdir(exist_ok=True)
 
 def download(name):
     target = Path(name.rsplit("/", 1)[-1])
@@ -203,8 +205,16 @@ def main():
         if n<8 or len(allq)<4:
             skipped["small_doc_or_workload"]+=len(allq);continue
         rng.shuffle(allq)
-        ntrain=max(2,min(len(allq)-2,int(round(.6*len(allq)))))
-        train,test=allq[:ntrain],allq[ntrain:]
+        if SCENARIO=="random":
+            ntrain=max(2,min(len(allq)-2,int(round(.6*len(allq)))))
+            train,test=allq[:ntrain],allq[ntrain:]
+        else:
+            source,target=(("bridge_chain","synthesis") if SCENARIO=="bridge_to_synthesis"
+                           else ("synthesis","bridge_chain"))
+            train=[q for q in allq if q["question_type"]==source]
+            test=[q for q in allq if q["question_type"]==target]
+            if len(train)<2 or len(test)<1:
+                skipped["missing_cross_type_workload"]+=len(allq);continue
         k=4
         labels={
             "contiguous":part_contig(n,k),
@@ -241,12 +251,12 @@ def main():
             row["metis_structure_frequency_replicated"]=min_active(
                 needed,labels["metis_structure"],frequency_replica)
             records.append(row)
-    assert records and len({x["doc_id"] for x in records})>=80
+    assert records and len({x["doc_id"] for x in records})>=20
     modes=("contiguous","random","metis_structure","metis_workload",
            "metis_structure_replicated","metis_structure_frequency_replicated")
     report={"schema":"bridge-partition-2026-feasibility-v1",
        "source_dataset":"diandianone123/topographrag-bench",
-       "seed":SEED,"n_queries":len(records),"n_documents":len(split_manifest),
+       "seed":SEED,"scenario":SCENARIO,"n_queries":len(records),"n_documents":len(split_manifest),
        "n_train_queries":sum(len(s["train_ids"]) for s in split_manifest),
        "skipped":dict(skipped),
        "methods":{mode:metric(records,mode) for mode in modes},
@@ -273,6 +283,7 @@ def main():
          "Workload METIS and train-only replication are known algorithmic baselines, NOT novel algorithms",
          "Training uses gold support pages as a proxy for historic successful queries; deployment traces may be noisy",
          "All test queries unseen at layout construction, but share source documents with training workload",
+         "Cross-type scenario tests transfer from one topology family to the other, not new document generalization",
          "No query-time retrieval, cross-encoder, graph extraction, remote networking, or LLM call",
          "Node weights are equal pages, not actual memory bytes; shards are balanced by page count",
          "Per-document replica allowance has minimum one copy, so 5 percent is not a hard global realized budget",
