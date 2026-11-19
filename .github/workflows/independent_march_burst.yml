@@ -1,0 +1,27 @@
+name: Independent March 2018 frozen one-swap third-month confirmation
+on:
+  push:
+    paths:
+      - '.github/workflows/independent_march_burst.yml'
+  workflow_dispatch:
+jobs:
+  frozen-policy-march:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned existing graph partitioners
+        run: pip install numpy==2.1.3 pymetis==2025.2.2 scikit-learn==1.6.1 mtkahypar==1.7.1
+      - name: Use unchanged one-swap policy on March 2018 observed first day
+        env:
+          HOT_MONTH: march
+        run: python research/bridge_partition/independent_month_burst.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: independent-hot-march
+          path: results_independent_hot_march/
+          if-no-files-found: warn
