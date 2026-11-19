@@ -144,10 +144,17 @@ def main():
             assert all(p in image_map for p in move_indices),(d,move_indices)
             benefits=[len({original[p] for p in pilot.pages(q)})-
                       len({gated[p] for p in pilot.pages(q)}) for q in future]
+            # Same bytes sent as migration, but original pages retained:
+            # an optimistic unconstrained extra-storage replication baseline.
+            replica_options={(p,gated[p]) for p in move_indices}
+            replicate_benefits=[len({original[p] for p in pilot.pages(q)})-
+                      pilot.min_active(pilot.pages(q),original,replica_options) for q in future]
             image_move_trace.append({"doc_id":d,"n_pages":n,
                 "incoming_questions":len(future),
                 "page_indices":move_indices,
                 "image_paths":[image_map[p] for p in move_indices],
+                "initial_shards":original,"post_move_shards":gated,
+                "replica_savings":sum(replicate_benefits),
                 "saved_shard_activations":sum(benefits),
                 "gains":sum(v>0 for v in benefits),"losses":sum(v<0 for v in benefits)})
         for q in future:
