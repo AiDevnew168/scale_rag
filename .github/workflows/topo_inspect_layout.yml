@@ -1,0 +1,29 @@
+name: Topo Inspect Layout Records
+on:
+  push:
+    paths: ['.github/workflows/topo_inspect_layout.yml']
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          pip -q install zstandard
+          python - <<'PY'
+          import urllib.request,tarfile,zstandard,json,io,os
+          url='https://huggingface.co/datasets/diandianone123/topographrag-bench/resolve/main/archives/layout_content.tar.zst'
+          urllib.request.urlretrieve(url,'layouts.tar.zst')
+          print('DOWNLOADED',os.stat('layouts.tar.zst').st_size)
+          with open('layouts.tar.zst','rb') as f:
+            with zstandard.ZstdDecompressor().stream_reader(f) as r:
+              with tarfile.open(fileobj=r,mode='r|') as t:
+                for m in t:
+                  if m.isfile() and m.name.endswith('.jsonl'):
+                    print('MEMBER',m.name,'SIZE',m.size)
+                    ff=t.extractfile(m)
+                    lines=io.TextIOWrapper(ff,encoding='utf-8')
+                    for idx,line in enumerate(lines):
+                      if idx==2:break
+                      j=json.loads(line)
+                      print('RECORD',idx,json.dumps(j,ensure_ascii=False)[:1800])
+                    break
+          PY
