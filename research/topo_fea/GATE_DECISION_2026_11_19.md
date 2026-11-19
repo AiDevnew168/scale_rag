@@ -79,3 +79,11 @@ Exact two-role matching was **not** better than the greedy two-role approach or 
 **Decision: NO-GO for new algorithm development or journal-paper claims now.** A narrow continuation requires simultaneously: (a) an appropriate stronger reranker with identical pool and budget; (b) labels for real relation compatibility on held-out documents; (c) per-query separation of missing evidence vs incorrect role assignment vs erroneous evidence joins; and (d) exact CP-SAT/ILP compared with greedy under identical semantic scores and constraints. If those conditions cannot be met, stop this line rather than building another large architecture.
 
 **Limitations:** not direct multimodal inference, not official end-to-end RAG, not a faithful FlowReader/G²-Reader reproduction, no question-wise formal prospective hypothesis lock, and no independent document-held-out confirmation. All results should be presented as exploratory feasibility and failure attribution only.
+
+
+## Independent execution-sharding reproducibility check
+
+A separate five-shard parallel rerun on the same original 300 questions, using five clean CI workers, completed successfully:
+https://github.com/AiDevnew168/scale_rag/actions/runs/44503581998
+
+Its aggregate independent fingerprint/same-question checks reproduced TF-IDF Full@6 = **33.000%**, CE Full@6 = **33.333%**, CE mean evidence Recall@6 = **60.144%**, and paired CE vs TF-IDF Delta = **+0.333 pp** with the same document-cluster CI **[-5.034,+5.883] pp**. This establishes computational reproducibility across job sharding. It is NOT a statistically independent replication, because all 300 queries and model weights were unchanged.
