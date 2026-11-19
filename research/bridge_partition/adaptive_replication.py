@@ -23,7 +23,7 @@ def select_copies(primary,history,budget,method):
     counts=Counter(primary);extra=Counter()
     used=set();copies=set()
     queries=[(pilot.pages(q),q) for q in history]
-    universe=sorted({p for pp,q in queries for p in pp})
+    universe=list(range(n)) # identical candidate page universe for all methods
     possibilities=[(p,s) for p in universe for s in range(K) if s!=primary[p]]
     # All strategies use identical page-copy limits and shard storage ceiling.
     for _ in range(budget):
@@ -123,6 +123,7 @@ def main():
         "No direct image pixels, extraction KG, distributed latency, actual byte-memory or router",
         "One replica per page, globally <= floor(5% pages), every destination shard <= ceil((pages+budget)/4)",
         "All comparison methods on original METIS base have exactly the same replica counts",
+        "Zero-feedback page candidates are legal and may be chosen after positive-value candidates to satisfy equal-copy budget",
         "All test questions unseen when selecting copies, yet same documents",
         "Re-choosing replicated pages ignores real invalidation and copy replacement bandwidth",
         "Exploratory after repeated reuse of the benchmark; not an independent confirmation"]}
