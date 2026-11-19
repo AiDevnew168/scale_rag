@@ -109,10 +109,42 @@ def select_graph(pool,raw,M,items,k):
         result.append(max((i for i in pool if i not in result),key=utility))
     return result
 
+def role_match(question,items,M,vec,pool,raw,k=6):
+    """Blind bipartite two-role assignment; roles parsed from question alone."""
+    q=question.strip()
+    m=re.match(r"(?is)^(?:for|among|in|of)\b(.{12,350}?),\s*(.+)$",q)
+    if m:
+        r1,r2=m.group(1),m.group(2)
+    else:
+        split=re.search(r",\s*(?:what|which|how|where|who|why)\b",q,re.I)
+        if split:r1,r2=q[:split.start()],q[split.start()+1:]
+        else:
+            parts=q.split()
+            mid=max(1,len(parts)//2)
+            r1,r2=" ".join(parts[:mid])," ".join(parts[mid:])
+    if len(r1.split())<3 or len(r2.split())<3:return pool[:k]
+    v1=vec.transform([r1]);v2=vec.transform([r2])
+    a=np.asarray((M@v1.T).toarray()).ravel()
+    b=np.asarray((M@v2.T).toarray()).ravel()
+    cand=pool[:min(40,len(pool))]
+    similarity=(M[cand]@M[cand].T).toarray()
+    best=(-1e30,None,None)
+    for x,i in enumerate(cand):
+        for y,j in enumerate(cand):
+            if i==j:continue
+            sim=float(similarity[x,y])
+            cohesion=.10*min(sim,.5)-.15*max(0.,sim-.7)
+            score=.55*(a[i]+b[j])+.45*(raw[i]+raw[j])+cohesion
+            if score>best[0]:best=(score,i,j)
+    if best[1] is None:return pool[:k]
+    selected=[best[1],best[2]]
+    selected.extend(i for i in pool if i not in selected)
+    return selected[:k]
+
 def predictions(question,items,M,vectorizer):
     scores=np.asarray((M@vectorizer.transform([question]).T).toarray()).reshape(-1)
     pool=choose_pool(scores,50)
-    return {"top":pool,"mmr":select_mmr(pool,scores,M,6),"graph_proxy":select_graph(pool,scores,M,items,6)}
+    return {"top":pool,"mmr":select_mmr(pool,scores,M,6),"graph_proxy":select_graph(pool,scores,M,items,6),"role_match":role_match(question,items,M,vectorizer,pool,scores,6)}
 
 def score(q,items,pred):
     # Evaluation-only access to gold. None of the above functions gets q.
@@ -157,19 +189,40 @@ def main():
             w=csv.DictWriter(f,fieldnames=list(rows[0]));w.writeheader();w.writerows(rows)
     def avg(k,part):
         return round(100*sum(r[k] for r in part)/len(part),2) if part else None
-    metric_keys=["all_gold_text_available"]+ [f"{method}_{what}_{k}" for method in ("top","mmr","graph_proxy") for what in ("full","recall") for k in (2,6)] + ["top_full_50"]
+    metric_keys=["all_gold_text_available"]+ [f"{method}_{what}_{k}" for method in ("top","mmr","graph_proxy","role_match") for what in ("full","recall") for k in (2,6)] + ["top_full_50"]
     by_kind={}
     for kind in ("bridge_chain","synthesis"):
         part=[x for x in rows if x["kind"]==kind]
         by_kind[kind]={"n":len(part),"metrics_percent":{key:avg(key,part) for key in metric_keys}}
+    # Fixed paired comparisons; bootstrap resamples whole source documents.
+    rng=random.Random(SEED)
+    bydoc=defaultdict(list)
+    for rr in rows:bydoc[rr["doc_id"]].append(rr)
+    document_ids=sorted(bydoc)
+    paired={}
+    for method in ("mmr","graph_proxy","role_match"):
+        for budget in (2,6):
+            new=f"{method}_full_{budget}"; old=f"top_full_{budget}"
+            wins=sum(x[new] and not x[old] for x in rows)
+            losses=sum(x[old] and not x[new] for x in rows)
+            delta=round(100*(wins-losses)/len(rows),3)
+            boots=[]
+            for _ in range(2000):
+                picks=[rng.choice(document_ids) for _ in document_ids]
+                rr=[row for d in picks for row in bydoc[d]]
+                boots.append(100*sum(x[new]-x[old] for x in rr)/len(rr))
+            ci=np.percentile(boots,[2.5,97.5])
+            paired[f"{method}_versus_top_at{budget}"]={"wins":wins,"losses":losses,
+                "delta_pp":delta,"cluster_bootstrap_ci95_pp":[round(float(ci[0]),3),round(float(ci[1]),3)]}
     report={"schema":"topo-failure-headroom-v1","source_dataset":"diandianone123/topographrag-bench",
        "seed":SEED,"total_questions":2024,"requested":300,"scored":len(rows),
        "missing":dict(missing),"source_layout_stats":dict(source_stats),
-       "metrics_percent":{key:avg(key,rows) for key in metric_keys},"by_topology":by_kind,
+       "metrics_percent":{key:avg(key,rows) for key in metric_keys},"by_topology":by_kind,"paired":paired,
        "status":"valid_initial_text_proxy" if len(rows)>=200 else "insufficient_scored_questions",
        "limitations":["Real layout text/OCR/VLM descriptions only, no direct image reading",
         "TF-IDF is a weak lexical baseline, not Cross-Encoder or FlowReader",
         "Pairwise graph proxy is a fixed diagnostic heuristic, NOT a proposed novel optimizer",
+        "Two-role assignment is a fixed lexical pilot, NOT a trained semantic constrained optimizer",
         "Gold labels exclusively used in metric computation",
         "No VLM end-to-end answer-accuracy test was run"]}
     (OUT/"report.json").write_text(json.dumps(report,indent=2))
