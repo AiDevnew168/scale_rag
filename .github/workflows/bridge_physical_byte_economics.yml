@@ -1,0 +1,33 @@
+name: Original JPEG byte-accurate migration economics
+on:
+  push:
+    paths:
+      - 'research/bridge_partition/physical_byte_break_even.py'
+      - '.github/workflows/bridge_physical_byte_economics.yml'
+  workflow_dispatch:
+jobs:
+  original-jpeg-economics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned source extraction and placement dependencies
+        run: pip install numpy==2.1.3 pymetis==2025.2.2 scikit-learn==1.6.1 zstandard==0.23.0
+      - name: Recompute fixed no-test-gold page swap and original image member IDs
+        env:
+          ONLINE_SOURCE: synthesis
+        run: python research/bridge_partition/query_text_prefetch.py
+      - name: Stream official 1GB image archive and audit exact JPG sizes plus byte capacity
+        run: python research/bridge_partition/physical_byte_break_even.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: physical-jpeg-migration-cost
+          path: |
+            results_physical_bytes/
+            results_text_prefetch_synthesis/report.json
+            results_text_prefetch_synthesis/image_move_trace.json
+          if-no-files-found: warn
