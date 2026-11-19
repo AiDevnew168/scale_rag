@@ -108,6 +108,26 @@ def replicate_greedy(primary, training, limit):
         copies.add(pair);occupied.add(pair[0])
     return copies
 
+def replicate_frequency(primary, training, limit):
+    """Equal-copy-count train-only popularity/neighbor-shard baseline."""
+    if limit <= 0:return set()
+    k=max(primary)+1
+    freq=Counter(p for q in training for p in pages(q))
+    candidates=[]
+    for p,count in freq.items():
+        for shard in range(k):
+            if shard==primary[p]:continue
+            neighbors=sum(1 for q in training if p in pages(q) and
+                          any(primary[v]==shard for v in pages(q) if v!=p))
+            candidates.append((neighbors,count,-p,-shard,(p,shard)))
+    candidates.sort(reverse=True)
+    selected=set();seen=set()
+    for *_,pair in candidates:
+        if pair[0] in seen:continue
+        selected.add(pair);seen.add(pair[0])
+        if len(selected)>=limit:break
+    return selected
+
 def metric(rows,mode):
     spans=[x[mode] for x in rows]
     return {"n":len(spans),
@@ -177,10 +197,14 @@ def main():
         # Hard cap: 5% extra copies of the original PDF page count, min 1.
         replication_limit=max(1,int(.05*n))
         replica=replicate_greedy(labels["metis_structure"],train,replication_limit)
+        frequency_replica=replicate_frequency(labels["metis_structure"],train,len(replica))
+        assert len(frequency_replica)==len(replica)
         split_manifest.append({"doc_id":doc,"pages":n,
           "train_ids":[q.get("mh_id") or q.get("sq_id") for q in train],
           "test_ids":[q.get("mh_id") or q.get("sq_id") for q in test],
-          "replicas":len(replica),"replica_budget":replication_limit})
+          "replicas":len(replica),"replica_budget":replication_limit,
+          "metis_structure_max_part_pages":max(Counter(labels["metis_structure"]).values()),
+          "metis_workload_max_part_pages":max(Counter(labels["metis_workload"]).values())})
         for q in test:
             needed=pages(q)
             row={"doc_id":doc,"qid":q.get("mh_id") or q.get("sq_id"),
@@ -190,10 +214,12 @@ def main():
                 row[name]=min_active(needed,lab,set())
             row["metis_structure_replicated"]=min_active(
                 needed,labels["metis_structure"],replica)
+            row["metis_structure_frequency_replicated"]=min_active(
+                needed,labels["metis_structure"],frequency_replica)
             records.append(row)
     assert records and len({x["doc_id"] for x in records})>=80
     modes=("contiguous","random","metis_structure","metis_workload",
-           "metis_structure_replicated")
+           "metis_structure_replicated","metis_structure_frequency_replicated")
     report={"schema":"bridge-partition-2026-feasibility-v1",
        "source_dataset":"diandianone123/topographrag-bench",
        "seed":SEED,"n_queries":len(records),"n_documents":len(split_manifest),
@@ -202,6 +228,13 @@ def main():
        "methods":{mode:metric(records,mode) for mode in modes},
        "imbalance_max_over_ideal":{x:round(max(a),3) for x,a in imbalance.items()},
        "replica_copies_total":sum(s["replicas"] for s in split_manifest),
+       "original_pages_total":sum(s["pages"] for s in split_manifest),
+       "realized_copy_ratio_pct":round(100*sum(s["replicas"] for s in split_manifest)/sum(s["pages"] for s in split_manifest),3),
+       "max_part_pages_exceed_ceil":{key:sum(d[key+"_max_part_pages"]>math.ceil(d["pages"]/4) for d in split_manifest)
+         for key in ("metis_structure","metis_workload")},
+       "by_query_kind":{kind:{method:metric([x for x in records if x["type"]==kind],method)
+              for method in modes}
+              for kind in ("bridge_chain","synthesis") if any(x["type"]==kind for x in records)},
        "replica_budget_total":sum(s["replica_budget"] for s in split_manifest),
        "paired":{
          "metis_workload_vs_metis_structure":clustered_difference(
@@ -209,13 +242,16 @@ def main():
          "metis_workload_vs_contiguous":clustered_difference(
              records,"metis_workload","contiguous"),
          "metis_structure_replicated_vs_metis_structure":clustered_difference(
-             records,"metis_structure_replicated","metis_structure")},
+             records,"metis_structure_replicated","metis_structure"),
+         "replication_greedy_vs_frequency_at_equal_copies":clustered_difference(
+             records,"metis_structure_replicated","metis_structure_frequency_replicated")},
        "cautions":["This is a page-shard placement diagnostic, NOT measured GraphRAG accuracy or latency",
          "Workload METIS and train-only replication are known algorithmic baselines, NOT novel algorithms",
          "Training uses gold support pages as a proxy for historic successful queries; deployment traces may be noisy",
          "All test queries unseen at layout construction, but share source documents with training workload",
          "No query-time retrieval, cross-encoder, graph extraction, remote networking, or LLM call",
          "Node weights are equal pages, not actual memory bytes; shards are balanced by page count",
+         "Per-document replica allowance has minimum one copy, so 5 percent is not a hard global realized budget",
          "Numbers describe oracle evidence span, not whether a real router finds those partitions"]}
     OUT.joinpath("report.json").write_text(json.dumps(report,indent=2))
     OUT.joinpath("per_question.jsonl").write_text("".join(json.dumps(x)+"\n" for x in records))
