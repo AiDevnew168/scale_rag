@@ -10,6 +10,8 @@ from collections import defaultdict,Counter
 from pathlib import Path
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
 import pilot
 import one_swap_oracle as previous
 import sys
@@ -67,12 +69,29 @@ def main():
     for q in allq:
         pp=pilot.pages(q);d=int(q["doc_id"])
         if len(pp)>1 and min(pp)>=0 and max(pp)<n_pages[d]:group[d].append(q)
+    # Fit a blind cross-document query-topology classifier (query TEXT ONLY)
+    # on non-evaluation docs. Split by document before fitting vocabulary.
+    eligible=set()
+    for d in sorted(group):
+        n=n_pages[d]
+        if not 20<=n<=39:continue
+        hist=[q for q in group[d] if q["question_type"]==MODE]
+        target=[q for q in group[d] if q["question_type"]==TARGET]
+        if len(hist)>=2 and len(target)>=4:eligible.add(d)
+    train_questions=[q for q in allq if q.get("question_type") in ("bridge_chain","synthesis")
+                     and int(q["doc_id"]) not in eligible]
+    assert train_questions and set(q["doc_id"] for q in train_questions).isdisjoint(eligible)
+    topology_vec=TfidfVectorizer(ngram_range=(1,2),stop_words="english",
+                                max_features=20000,min_df=2)
+    Xt=topology_vec.fit_transform([q["question"] for q in train_questions])
+    topology_model=LogisticRegression(max_iter=500,class_weight="balanced",random_state=SEED)
+    topology_model.fit(Xt,[int(q["question_type"]=="bridge_chain") for q in train_questions])
     archive=Path("layouts.tar.zst")
     if not archive.exists():
         import urllib.request
         urllib.request.urlretrieve(pilot.ROOT+"archives/layout_content.tar.zst",archive)
     source,stats=audit.text_layouts(archive,man)
-    rows=[];included=[];warnings=Counter()
+    rows=[];included=[];warnings=Counter();topology_correct=Counter()
     for d in sorted(group):
         n=n_pages[d]
         if not 20<=n<=39:continue
@@ -92,6 +111,19 @@ def main():
             prefetch2=best_one_swap(original,predicted2)
             prefetch3=best_one_swap(original,predicted3)
             future_oracle=previous.oracle_one_swap(original,future)[0]
+            # No gold future topology or support used. Classification uses
+            # question wording only, with no labels from evaluation documents.
+            predicted_bridge=topology_model.predict(
+                topology_vec.transform([q["question"] for q in future]))
+            predicted_rate=float(np.mean(predicted_bridge))
+            do_prefetch=predicted_rate>=.5
+            gated=prefetch3 if do_prefetch else original
+            topology_correct["n_batches"]+=1
+            topology_correct["n_correct_batches"]+=int(
+                do_prefetch==(TARGET=="bridge_chain"))
+            topology_correct["n_future_queries"]+=len(future)
+            topology_correct["n_correct_future_questions"]+=int(
+                do_prefetch==(TARGET=="bridge_chain"))*len(future)
         except Exception as e:
             warnings[type(e).__name__]+=1;continue
         included.append({"doc_id":d,"historical_q":len(hist),"feedback_q":len(seen),
@@ -101,23 +133,30 @@ def main():
             row={"doc_id":d,"qid":q.get("mh_id") or q.get("sq_id")}
             for method,p in (("static",original),("observed_swap",observed),
                              ("prefetch2",prefetch2),("prefetch3",prefetch3),
+                             ("topology_gated",gated),
                              ("future_oracle",future_oracle)):
                 row[method]=len({p[x] for x in needed})
             rows.append(row)
     if len(included)<12 or len(rows)<40:raise RuntimeError(f"Not enough examples {len(included)} {len(rows)}")
-    methods=("static","observed_swap","prefetch2","prefetch3","future_oracle")
+    methods=("static","observed_swap","prefetch2","prefetch3","topology_gated","future_oracle")
     report={"schema":"prospective-question-text-prefetch-v1",
       "mode":MODE+"_to_"+TARGET,
       "n_docs":len(included),"n_queries":len(rows),
+      "topology_prediction_counts":dict(topology_correct),
+      "classifier_train_questions":len(train_questions),
+      "classifier_train_documents":len(set(q["doc_id"] for q in train_questions)),
       "means":{m:previous.test_stats(rows,m) for m in methods},
       "paired":{
          "prefetch2_vs_static":previous.bootstrap(rows,"prefetch2","static"),
+         "topology_gated_vs_static":previous.bootstrap(rows,"topology_gated","static"),
          "prefetch3_vs_static":previous.bootstrap(rows,"prefetch3","static"),
          "prefetch2_vs_observed":previous.bootstrap(rows,"prefetch2","observed_swap"),
          "oracle_vs_prefetch2":previous.bootstrap(rows,"future_oracle","prefetch2")},
       "warnings":dict(warnings),
       "cautions":[
         "Future QUESTION TEXT is known and used to plan before serving an incoming query batch: THIS IS NOT unknown-future forecasting",
+        "Gated selection devised after reviewing previous per-type performance: exploratory, not independent confirmation",
+        "Question topology classifier trained only on completely different documents and query text, not gold supports",
         "Future GOLD evidence pages never used in scoring or choosing prefetch swap; except separate explicitly labeled retrospective oracle",
         "One swap exchanges two equal-page-cost nodes, same migration budget across methods",
         "Full source page texts/visual descriptions, not image pixels; query text top-k lexical is an imperfect relevance proxy",
