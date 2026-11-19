@@ -1,0 +1,30 @@
+name: Frozen 2018 day0 dual-risk tail and head swap audit
+on:
+  push:
+    paths:
+      - '.github/workflows/dual_risk_swap_audit.yml'
+  workflow_dispatch:
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        month: [january, february, march]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy==2.1.3 pymetis==2025.2.2 mtkahypar==1.7.1
+      - name: Compare day0-only frequency and unique-pattern-safe swaps
+        env:
+          RISK_MONTH: ${{ matrix.month }}
+        run: python research/bridge_partition/dual_risk_swap_audit.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dual-risk-${{ matrix.month }}
+          path: results_dual_risk_${{ matrix.month }}/
+          if-no-files-found: warn
