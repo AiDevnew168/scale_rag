@@ -1,0 +1,26 @@
+name: Real December day0-only hot-pattern one-swap rescue
+on:
+  push:
+    paths:
+      - 'research/bridge_partition/december_burst_swap.py'
+      - '.github/workflows/december_hot_swap.yml'
+  workflow_dispatch:
+jobs:
+  day0-control:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install fixed open-source graph partition baselines
+        run: pip install numpy==2.1.3 pymetis==2025.2.2 scikit-learn==1.6.1 mtkahypar==1.7.1
+      - name: Observe December day0 only then score days1 through27
+        run: python research/bridge_partition/december_burst_swap.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: december-day0-adaptive-one-swap
+          path: results_december_hot_repair/
+          if-no-files-found: warn
