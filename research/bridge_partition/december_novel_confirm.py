@@ -82,6 +82,29 @@ def main():
       "secondary_unique_truly_new_patterns":unique_new,
       "secondary_seen_patterns":known,
       "secondary_all_requests":test}
+    # Source-data quality audit: extremely common query templates can
+    # dominate request-weighted scores despite rare distinct patterns.
+    def concentration(records):
+        counts=Counter(pp for _,pp in records)
+        total=sum(counts.values())
+        most=counts.most_common(12)
+        return {
+          "n_requests":total,"n_unique_predicate_sets":len(counts),
+          "top1_pct":round(100*most[0][1]/total,3) if most else 0,
+          "top10_pct":round(100*sum(c for _,c in most[:10])/total,3) if most else 0,
+          "inverse_simpson_effective_patterns":round(1/sum((c/total)**2 for c in counts.values()),2) if total else 0,
+          "top_patterns":[{
+             "predicates":[selected[i] for i in pp],"requests":count,
+             "known_in_historical_or_observed":pp in seen,
+             "metis_static_local":len({metis_static[i] for i in pp})==1,
+             "metis_bounded_local":len({metis_bounded[i] for i in pp})==1,
+             "hyper_static_local":len({hyper_static[i] for i in pp})==1,
+             "hyper_bounded_local":len({hyper_bounded[i] for i in pp})==1}
+             for pp,count in most]}
+    concentration_summary={
+      "all_future":concentration(test),
+      "truly_new_future":concentration(truly_new),
+      "previously_seen_future":concentration(known)}
     methods=tuple(partitions)
     summaries={name:subgroup(group,partitions,methods)
                for name,group in parts.items()}
@@ -102,6 +125,7 @@ def main():
          "hyper_bounded":r.optimal_label_moves(hyper_static,hyper_bounded),
          "metis_bounded":r.optimal_label_moves(metis_static,metis_bounded)},
       "subgroups":summaries,
+      "predicate_pattern_concentration":concentration_summary,
       "primary_gate":{"observed_delta_pp":primary["delta_local_pp"],
          "day_block_ci95_pp":primary["day_block_ci95_pp"],
          "sign_positive_ci95":primary["day_block_ci95_pp"][0]>0},
