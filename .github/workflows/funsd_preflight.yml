@@ -1,0 +1,24 @@
+name: FUNSD real relation dataset preflight
+on:
+  push:
+    paths: ['.github/workflows/funsd_preflight.yml']
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: |
+          python - <<'PY'
+          import urllib.request,zipfile,io,hashlib,json,collections
+          u='https://guillaumejaume.github.io/FUNSD/dataset.zip'
+          r=urllib.request.Request(u,headers={'User-Agent':'Mozilla/5.0'})
+          b=urllib.request.urlopen(r,timeout=80).read()
+          print('ARCHIVE_BYTES',len(b),'SHA256',hashlib.sha256(b).hexdigest())
+          z=zipfile.ZipFile(io.BytesIO(b))
+          names=[n for n in z.namelist() if n.endswith('.json')]
+          print('NAMES',len(names),'TRAIN',sum('training_data/annotations/' in n for n in names),'TEST',sum('testing_data/annotations/' in n for n in names))
+          print('FIRST_TEN',names[:10])
+          for name in names[:2]:
+              x=json.loads(z.read(name)); ents=x.get('form',[])
+              print('SAMPLE',name,'N_ENTITIES',len(ents),'FIRST',json.dumps(ents[0],ensure_ascii=False)[:700] if ents else None)
+          PY
