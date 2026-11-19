@@ -15,6 +15,7 @@ MONTH=os.environ.get("HOT_MONTH","january")
 MONTHS={
  "january":("2018-01-01_2018-01-28",datetime.datetime(2018,1,1)),
  "february":("2018-01-29_2018-02-25",datetime.datetime(2018,1,29)),
+ "march":("2018-02-26_2018-03-25",datetime.datetime(2018,2,26)),
 }
 assert MONTH in MONTHS,MONTH
 span,start=MONTHS[MONTH]
@@ -49,6 +50,15 @@ def main():
     known=[r for r in future if r[1] in known_train]
     onepattern,n=count_patterns(day0).most_common(1)[0]
     topfuture=[r for r in future if r[1]==onepattern]
+    # EXTRA EVALUATION ONLY: unique-pattern fairness and concentration.
+    unique_future=sorted({q for _,q in future})
+    unique_novel=sorted({q for _,q in new})
+    without_hot=[r for r in future if r[1]!=onepattern]
+    def pat_report(patterns,policies):
+        return {name:{"n_unique":len(patterns),
+                 "local_pct":round(100*sum(locked.span(p,q)==1 for q in patterns)/len(patterns),3) if patterns else None,
+                 "mean_shards":round(sum(locked.span(p,q) for q in patterns)/len(patterns),4) if patterns else None}
+                for name,p in policies.items()}
     result={
       "schema":"independent-2018-month-day0-burst-swap-v1",
       "LOCKED_method":"Import unchanged exact observed-one-swap from december_burst_swap.py",
@@ -66,6 +76,9 @@ def main():
          "initial_strong_span":locked.span(original,onepattern),
          "after_strong_swap_span":locked.span(updated,onepattern)},
       "decision_strong":decision,"decision_tail":tail_decision,
+      "unique_pattern_metrics":{"all_unique":pat_report(unique_future,policies),
+           "novel_unique":pat_report(unique_novel,policies)},
+      "outside_dominant_hot_pattern":locked.report_subset(without_hot,policies),
       "metrics":{
          "all_future":locked.report_subset(future,policies),
          "new_combinations":locked.report_subset(new,policies),
