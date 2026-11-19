@@ -1,0 +1,31 @@
+name: Online shift 10-percent migration experiment
+on:
+  push:
+    paths:
+      - 'research/bridge_partition/online_adaptation.py'
+      - '.github/workflows/bridge_online.yml'
+  workflow_dispatch:
+jobs:
+  adapt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        family: [bridge_chain, synthesis]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy==2.1.3 pymetis==2025.2.2
+      - name: Test observed phase-2 adaptation and unobserved future queries
+        env:
+          ONLINE_SOURCE: ${{ matrix.family }}
+        run: python research/bridge_partition/online_adaptation.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: online-shift-${{ matrix.family }}
+          path: results_online_${{ matrix.family }}/
+          if-no-files-found: warn
