@@ -29,7 +29,7 @@ def metis_from_matrix(W,items):
     for i in range(len(items)):
         for j in range(i+1,len(items)):
             if W[i,j]>0:
-                co[(i,j)]=max(1,int(round(100*W[i,j])))
+                co[(i,j)]=max(1,int(round(W[i,j]))) # same relative weight as original temporal baseline
     return base.balanced_metis(items,co)
 
 def optimal_label_moves(a,b):
@@ -166,6 +166,7 @@ def main():
         "Top-120 predicates chosen on historic 14d only; test restricted to multifacet queries containing 2-12 of them",
         "Predicates treated as equal-weight nodes; no real storage bytes, triple volume or network latency",
         "No test queries, predicates coaccess, or answers used to choose placements",
+       "The coaccess-to-backbone ratio is aligned with the original temporal baseline",
         "Migration counts are exact Hamming minimized over unlabeled shard permutations",
         "All underlying algorithms are established baseline heuristics, not new mathematical novelty",
         "Only seven future days; day-block CI estimates exploratory, no independent replicate stream"]}
