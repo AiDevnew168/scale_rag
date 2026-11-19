@@ -1,0 +1,26 @@
+name: TopoGraphRAG Feasibility Data Access
+on:
+  push:
+    paths:
+      - '.github/workflows/topo_probe.yml'
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download public benchmark annotations and verify schema
+        run: |
+          python - <<'PY'
+          import urllib.request, json, hashlib, collections
+          base='https://huggingface.co/datasets/diandianone123/topographrag-bench/resolve/main/'
+          for name in ['annotations/benchmark.json','manifest.json']:
+              data=urllib.request.urlopen(base+name,timeout=90).read()
+              print('FILE',name,len(data),'sha256',hashlib.sha256(data).hexdigest())
+              obj=json.loads(data)
+              if 'benchmark' in name:
+                  print('ROWS',len(obj),'TYPES',dict(collections.Counter(x.get('question_type') for x in obj)))
+                  print('SAMPLE',json.dumps(obj[0],ensure_ascii=False)[:500])
+              else:
+                  print('MANIFEST_TYPE',type(obj).__name__,'KEYS',list(obj)[:8])
+          PY
