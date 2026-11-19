@@ -64,8 +64,10 @@ def main():
     a25,_=hg.hybrid(train,120,.25)
     dec,sha2=hg.period(DEC_URL,datetime.datetime(2017,12,3))
     data,_=base.prop_stats(dec,selected)
-    observed=[r for r in data if r[0]==0]
-    future=[r for r in data if r[0]>=1]
+    first_day=min(day for day,_ in data)
+    observed=[r for r in data if r[0]==first_day]
+    future=[r for r in data if r[0]>first_day]
+    print("FIRST_OBSERVED_DAY",first_day,"OBSERVED_N",len(observed),"FUTURE_N",len(future),flush=True)
     assert len(observed)>100 and len(future)>50000
     beta25_update,detail25=optimizer_one_swap(a25,observed)
     beta0_update,detail0=optimizer_one_swap(a0,observed)
@@ -88,7 +90,8 @@ def main():
       "original_sha256":{"june":sha,"december":sha2},
       "source_december":DEC_URL,
       "train_policy":"June12-25 feature IDs; July tuning beta .25 was chosen earlier, NOT independently here",
-      "observed_new_period":"December 3 2017 ONLY",
+      "observed_new_period":"First date actually present in December file (recorded as observed_day)",
+      "observed_day_relative_to_Dec3":first_day,
       "future_heldout_period":"December 4-30 2017",
       "observed_eligible_requests":len(observed),
       "future_eligible_requests":len(future),
