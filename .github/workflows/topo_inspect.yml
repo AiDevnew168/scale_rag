@@ -1,0 +1,20 @@
+name: Topo Inspect Layout Source
+on:
+  push:
+    paths: ['.github/workflows/topo_inspect.yml']
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect manifest and public archive sizes
+        run: |
+          python - <<'PY'
+          import urllib.request,json
+          b='https://huggingface.co/datasets/diandianone123/topographrag-bench/'
+          m=json.load(urllib.request.urlopen(b+'resolve/main/manifest.json'))
+          d=m['documents']
+          print('DOCS_TYPE',type(d).__name__,'COUNT',len(d))
+          print('DOC_SAMPLE',json.dumps(d[0] if isinstance(d,list) else list(d.items())[:1])[:2700])
+          api=json.load(urllib.request.urlopen('https://huggingface.co/api/datasets/diandianone123/topographrag-bench/tree/main/archives?recursive=true&expand=true'))
+          print('ARCHIVES',json.dumps([{'path':x.get('path'),'size':x.get('size')} for x in api])[:6000])
+          PY
