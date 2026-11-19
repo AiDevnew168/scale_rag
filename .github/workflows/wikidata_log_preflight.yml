@@ -1,0 +1,33 @@
+name: Real timestamped Wikidata workload preflight
+on:
+  push:
+    paths: ['.github/workflows/wikidata_log_preflight.yml']
+  workflow_dispatch:
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Inspect true timestamped organic query traffic
+        run: |
+          python - <<'PY'
+          import urllib.request,gzip,csv,io,hashlib,collections,urllib.parse,re,datetime
+          url='https://analytics.wikimedia.org/datasets/one-off/wikidata/sparql_query_logs/2017-06-12_2017-07-09/2017-06-12_2017-07-09_organic.tsv.gz'
+          b=urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'ResearchNoncommercial/1.0'}),timeout=90).read()
+          print('ARCHIVE_BYTES',len(b),'SHA256',hashlib.sha256(b).hexdigest())
+          text=gzip.decompress(b).decode('utf-8',errors='replace')
+          lines=text.splitlines()
+          print('TOTAL_LINES',len(lines))
+          print('HEAD',repr(lines[0][:350]))
+          for x in lines[1:5]:print('ROW',repr(x[:380]))
+          rows=[x.split('\t') for x in lines]
+          print('COLUMN_LENGTHS',collections.Counter(len(x) for x in rows).most_common())
+          print('TIMESTAMP_EXAMPLES',[x[1] for x in rows[:5] if len(x)>1])
+          patt=re.compile(r'(?:wdt:|/prop/direct/)(P\d+)',re.I)
+          co=collections.Counter()
+          for x in rows[:5000]:
+            if len(x)<2:continue
+            q=urllib.parse.unquote(x[0])
+            co.update(set(patt.findall(q)))
+          print('PREDICATES_SAMPLE',co.most_common(15))
+          PY
