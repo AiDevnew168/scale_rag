@@ -1,0 +1,44 @@
+name: WDQL SIGIR 2026 NL-to-SPARQL dataset feasibility preflight
+on:
+  push:
+    paths: ['.github/workflows/wdql_nl_preflight.yml']
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download and inspect cluster-disjoint WDQL public release
+        run: |
+          python - <<'PY'
+          import urllib.request,tarfile,hashlib,json,collections,re,time
+          from pathlib import Path
+          url='https://wdql.cs.uni-freiburg.de/data/latest/wdql-one-per-cluster.tar.gz'
+          path=Path('/tmp/wdql-one-per-cluster.tar.gz')
+          req=urllib.request.Request(url,headers={'User-Agent':'ScientificDatasetAudit/1.0'})
+          with urllib.request.urlopen(req,timeout=120) as r, path.open('wb') as f:
+            while True:
+              chunk=r.read(1024*1024)
+              if not chunk: break
+              f.write(chunk)
+          b=path.read_bytes()
+          print('SOURCE_URL',url)
+          print('ARCHIVE_BYTES',len(b),'SHA256',hashlib.sha256(b).hexdigest())
+          pattern=re.compile(r'(?:(?:wdt:)|(?:/prop/direct/))(P\d+)',re.I)
+          with tarfile.open(path,'r:gz') as tar:
+            files=[m for m in tar if m.isfile() and m.name.endswith('.jsonl')]
+            print('FILES',[(m.name,m.size) for m in files])
+            for member in files:
+              parts=collections.Counter(); uniq=set(); examples=[];n=0
+              fh=tar.extractfile(member)
+              for line in fh:
+                rec=json.loads(line)
+                n+=1
+                if n<=2:examples.append({k:rec.get(k) for k in ('id','question','sparql','paraphrases')})
+                props=set(pattern.findall(rec.get('sparql','')))
+                parts['relations_'+str(min(len(props),10))]+=1
+                parts['nonempty_question']+=bool(rec.get('question'))
+                parts['has_sparql']+=bool(rec.get('sparql'))
+                if rec.get('question'):uniq.add(rec['question'])
+              print('SPLIT',member.name,'ROWS',n,'N_DISTINCT_QUESTIONS',len(uniq),'COUNTS',dict(parts))
+              print('EXAMPLES',json.dumps(examples,ensure_ascii=False)[:2200])
+          PY
