@@ -71,7 +71,31 @@ def metis_pages(n, k, training, weight):
     _, membership = pymetis.part_graph(
         k, xadj=xadj, adjncy=adjncy, eweights=eweights,
         vweights=[1]*n, options=pymetis.Options(seed=SEED))
-    return list(membership)
+    # Enforce *identical hard per-shard maximum* to avoid buying lower span
+    # through a larger shard. This is a standard local cut-gain repair, not novelty.
+    membership=list(membership)
+    cap=math.ceil(n/k)
+    counts=Counter(membership)
+    rounds=0
+    while max(counts.values())>cap:
+        moves=[]
+        for u,old in enumerate(membership):
+            if counts[old]<=cap:continue
+            for target in range(k):
+                if target==old or counts[target]>=cap:continue
+                change=0
+                for v,w in adj[u]:
+                    change+=w*(int(target!=membership[v])-int(old!=membership[v]))
+                moves.append((change,u,target,old))
+        if not moves:raise AssertionError("No feasible balance repair move")
+        change,u,target,old=min(moves)
+        membership[u]=target
+        counts[old]-=1
+        counts[target]+=1
+        rounds+=1
+        if rounds>n*k:raise AssertionError("Balance repair did not terminate")
+    assert max(counts.values())<=cap
+    return membership
 
 def min_active(pages_needed, primary, copies):
     pp=set(pages_needed)
