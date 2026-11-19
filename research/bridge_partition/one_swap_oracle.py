@@ -61,27 +61,33 @@ def main():
         part=pilot.metis_pages(n,4,hist,400)
         adapted,moves=online_refine(part,hist,seen,int(.1*n))
         oracle,gain=oracle_one_swap(part,future)
+        observed_best,observed_gain=oracle_one_swap(part,seen)
         assert max(Counter(oracle).values())<=math.ceil(n/4)
         assert gain>=0
         eligible["oracle_positive_docs"]+=int(gain>0)
         docs.append({"doc_id":d,"n_pages":n,"n_future":len(future),
             "train_query_n":len(hist),"observed_query_n":len(seen),
-            "oracle_extra_local_queries":gain,"adaptation_page_moves":moves})
+            "oracle_extra_local_queries":gain,"adaptation_page_moves":moves,
+            "observed_local_gain":observed_gain})
         for q in future:
             pp=pilot.pages(q)
             rows.append({"doc_id":d,"qid":q.get("mh_id") or q.get("sq_id"),
               "static":len({part[p] for p in pp}),
               "actual_feedback_adaptation":len({adapted[p] for p in pp}),
-              "future_oracle_one_swap":len({oracle[p] for p in pp})})
+              "future_oracle_one_swap":len({oracle[p] for p in pp}),
+              "observed_one_swap":len({observed_best[p] for p in pp})})
     if len(docs)<12 or len(rows)<40:raise RuntimeError(f"Insufficient eligible cases {len(docs)} docs {len(rows)} queries")
     report={"schema":"bridge-one-swap-oracle-diagnostic-v1","scenario":MODE+"_to_"+TARGET,
       "n_docs":len(docs),"n_future_queries":len(rows),
       "oracle_positive_docs":eligible["oracle_positive_docs"],
-      "means":{m:test_stats(rows,m) for m in ("static","actual_feedback_adaptation","future_oracle_one_swap")},
+      "means":{m:test_stats(rows,m) for m in ("static","actual_feedback_adaptation","observed_one_swap","future_oracle_one_swap")},
       "paired":{"oracle_vs_static":bootstrap(rows,"future_oracle_one_swap","static"),
        "actual_vs_static":bootstrap(rows,"actual_feedback_adaptation","static"),
-       "oracle_vs_actual":bootstrap(rows,"future_oracle_one_swap","actual_feedback_adaptation")},
-      "cautions":["Future GOLD used directly to optimize oracle one swap: diagnostic headroom ONLY, not a deployable algorithm",
+       "observed_one_swap_vs_static":bootstrap(rows,"observed_one_swap","static"),
+       "oracle_vs_actual":bootstrap(rows,"future_oracle_one_swap","actual_feedback_adaptation"),
+       "oracle_vs_observed":bootstrap(rows,"future_oracle_one_swap","observed_one_swap")},
+      "cautions":["Observed one-swap uses ONLY new feedback traces and is a train-only usable heuristic",
+       "Future GOLD used directly to optimize oracle one swap: diagnostic headroom ONLY, not a deployable algorithm",
        "Exact maximum is only over zero or one cross-shard two-page swaps, NOT all possible <=10% migration moves",
        "Same document benchmark repeatedly analyzed, exploratory intervals only",
        "This is a page-span proxy, no real retrieval, memory bytes or network latency"]}
