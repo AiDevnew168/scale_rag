@@ -2,7 +2,7 @@
 """LOCKED temporal cross-month test of already implemented day0 single-swap policy.
 
 The exact single-swap policy is imported unchanged from december_burst_swap.py.
-No January or February query logs used for tuning or training. First populated
+No January, February or March query logs used for tuning or training. First populated
 calendar day is observed, remainder are future test.
 """
 import datetime,json,os
@@ -15,6 +15,7 @@ MONTH=os.environ.get("HOT_MONTH","january")
 MONTHS={
  "january":("2018-01-01_2018-01-28",datetime.datetime(2018,1,1)),
  "february":("2018-01-29_2018-02-25",datetime.datetime(2018,1,29)),
+ "march":("2018-02-26_2018-03-25",datetime.datetime(2018,2,26)),
  "march":("2018-02-26_2018-03-25",datetime.datetime(2018,2,26)),
 }
 assert MONTH in MONTHS,MONTH
