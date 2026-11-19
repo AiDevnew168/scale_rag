@@ -91,7 +91,7 @@ def main():
         import urllib.request
         urllib.request.urlretrieve(pilot.ROOT+"archives/layout_content.tar.zst",archive)
     source,stats=audit.text_layouts(archive,man)
-    rows=[];included=[];warnings=Counter();topology_correct=Counter();movement=Counter()
+    rows=[];included=[];warnings=Counter();topology_correct=Counter();movement=Counter();image_move_trace=[]
     for d in sorted(group):
         n=n_pages[d]
         if not 20<=n<=39:continue
@@ -132,6 +132,24 @@ def main():
             warnings[type(e).__name__]+=1;continue
         included.append({"doc_id":d,"historical_q":len(hist),"feedback_q":len(seen),
            "future_q":len(future),"n_pages":n})
+        move_indices=[p for p,(a,b) in enumerate(zip(original,gated)) if a!=b]
+        if move_indices:
+            # Official manifest page_images list is lexicographically sorted:
+            # mapping by suffix preserves index=10 vs index=2.
+            import re
+            image_map={}
+            for file_path in man["documents"][d]["files"]["page_images"]:
+                matched=re.search(r"_(\\d+)\\.(?:jpg|jpeg|png)$",file_path,re.I)
+                if matched:image_map[int(matched.group(1))]=file_path
+            assert all(p in image_map for p in move_indices),(d,move_indices)
+            benefits=[len({original[p] for p in pilot.pages(q)})-
+                      len({gated[p] for p in pilot.pages(q)}) for q in future]
+            image_move_trace.append({"doc_id":d,"n_pages":n,
+                "incoming_questions":len(future),
+                "page_indices":move_indices,
+                "image_paths":[image_map[p] for p in move_indices],
+                "saved_shard_activations":sum(benefits),
+                "gains":sum(v>0 for v in benefits),"losses":sum(v<0 for v in benefits)})
         for q in future:
             needed=pilot.pages(q)
             row={"doc_id":d,"qid":q.get("mh_id") or q.get("sq_id")}
@@ -173,5 +191,6 @@ def main():
     OUT.joinpath("report.json").write_text(json.dumps(report,indent=2))
     OUT.joinpath("per_question.jsonl").write_text("".join(json.dumps(x)+"\n" for x in rows))
     OUT.joinpath("document_ids.json").write_text(json.dumps(included,indent=2))
+    OUT.joinpath("image_move_trace.json").write_text(json.dumps(image_move_trace,indent=2))
     print("PREFETCH_REPORT_START");print(json.dumps(report,indent=2));print("PREFETCH_REPORT_END")
 if __name__=="__main__":main()
