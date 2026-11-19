@@ -1,0 +1,23 @@
+name: Real time-series direct Mt-KaHyPar baseline
+on:
+  push:
+    paths: ['research/bridge_partition/temporal_hypergraph.py','.github/workflows/temporal_hypergraph.yml']
+  workflow_dispatch:
+jobs:
+  temporal-hypergraph:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy==2.1.3 pymetis==2025.2.2 scikit-learn==1.6.1 mtkahypar==1.7.1
+      - name: Compare direct KM1 and CUT with clique METIS chronologically
+        run: python research/bridge_partition/temporal_hypergraph.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: real-wikidata-strong-hypergraph
+          path: results_temporal_hg/
+          if-no-files-found: warn
