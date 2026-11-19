@@ -64,6 +64,7 @@ def predict_page_sets(questions,contents,n_top):
 def main():
     allq=pilot.download("annotations/benchmark.json")
     man=pilot.download("manifest.json")
+    source_documents={int(d["doc_id"]):d for d in man["documents"]}
     n_pages={int(d["doc_id"]):len(d["files"]["page_images"]) for d in man["documents"]}
     group=defaultdict(list)
     for q in allq:
@@ -138,7 +139,7 @@ def main():
             # mapping by suffix preserves index=10 vs index=2.
             import re
             image_map={}
-            for file_path in man["documents"][d]["files"]["page_images"]:
+            for file_path in source_documents[d]["files"]["page_images"]:
                 matched=re.search(r"_(\d+)\.(?:jpg|jpeg|png)$",file_path,re.I)
                 if matched:image_map[int(matched.group(1))]=file_path
             assert all(p in image_map for p in move_indices),(d,move_indices)
