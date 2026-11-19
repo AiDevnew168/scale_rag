@@ -38,6 +38,8 @@ def hypergraph_partition(n, training, k, *, query_weight=400, objective="KM1"):
     ctx.logging=False
     hg=MTK.create_hypergraph(ctx,n,len(pins),[list(t) for t in pins],
                              [1]*n,weights)
+    # Reset deterministic seed FOR EACH partition call, independent of invocation order.
+    mtkahypar.set_seed(SEED)
     p=hg.partition(ctx)
     labels=[int(p.block_id(v)) for v in range(n)]
     counts=Counter(labels)
