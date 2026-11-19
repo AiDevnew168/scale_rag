@@ -1,0 +1,25 @@
+name: Prospective novel-pattern December workload test
+on:
+  push:
+    paths:
+      - 'research/bridge_partition/novel_december_gate.py'
+      - '.github/workflows/bridge_novel_december.yml'
+  workflow_dispatch:
+jobs:
+  independent-december:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy==2.1.3 scikit-learn==1.6.1 pymetis==2025.2.2 mtkahypar==1.7.1
+      - name: Select via July novel patterns, test untouched December 2017
+        run: python research/bridge_partition/novel_december_gate.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: real-novel-pattern-december-gate
+          path: results_novel_december/
+          if-no-files-found: warn
