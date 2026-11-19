@@ -1,0 +1,25 @@
+name: December independent unseen-hyperedge tail confirmation
+on:
+  push:
+    paths:
+      - 'research/bridge_partition/december_novel_confirm.py'
+      - '.github/workflows/wikidata_december_novel.yml'
+  workflow_dispatch:
+jobs:
+  december:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy==2.1.3 pymetis==2025.2.2 scikit-learn==1.6.1 mtkahypar==1.7.1
+      - name: Test preregistered unseen-pattern effect on independent Dec 2017 log
+        run: python research/bridge_partition/december_novel_confirm.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wikidata-december-true-novel-pattern-gate
+          path: results_december_novel_confirm/
+          if-no-files-found: warn
