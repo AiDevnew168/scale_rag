@@ -1,0 +1,14 @@
+name: Topo evidence cardinality correctness check
+on:
+  push:
+    paths:
+      - "research/topo_fea/gold_schema_audit.py"
+      - ".github/workflows/topo_gold_audit.yml"
+  workflow_dispatch:
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: python research/topo_fea/gold_schema_audit.py
