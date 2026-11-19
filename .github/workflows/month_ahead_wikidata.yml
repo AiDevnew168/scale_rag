@@ -1,0 +1,23 @@
+name: Independent next-month real Wikidata workload heldout
+on:
+  push:
+    paths: ['research/bridge_partition/month_ahead_wikidata.py', '.github/workflows/month_ahead_wikidata.yml']
+  workflow_dispatch:
+jobs:
+  next-month:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy==2.1.3 pymetis==2025.2.2 scikit-learn==1.6.1 mtkahypar==1.7.1
+      - name: Test June frozen partition on independent July-August organic queries
+        run: python research/bridge_partition/month_ahead_wikidata.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: independent-future-month-wikidata
+          path: results_temporal_next_month/
+          if-no-files-found: warn
