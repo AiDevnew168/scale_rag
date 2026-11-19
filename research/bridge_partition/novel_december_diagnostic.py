@@ -29,10 +29,26 @@ def main():
         return {"local":round(100*sum(span(q,p)==1 for q in qs)/len(qs),3),
                 "n":len(qs),"mean_activated":round(sum(span(q,p) for q in qs)/len(qs),4)}
     samples=list(counts)
+    # Unique-support-set paired comparison: one vote per unseen combination,
+    # not weighted by its frequency in the observed request stream.
+    import random
+    winloss={}
+    for beta in (0.25,1):
+        a=preds[beta];b=preds[0]
+        wins=sum(span(q,a)==1 and span(q,b)!=1 for q in samples)
+        losses=sum(span(q,a)!=1 and span(q,b)==1 for q in samples)
+        rng=random.Random(261119)
+        diffs=[int(span(q,a)==1)-int(span(q,b)==1) for q in samples]
+        boots=sorted([100*sum(rng.choice(diffs) for _ in diffs)/len(diffs)
+                      for _ in range(2000)])
+        winloss[str(beta)]={"wins":wins,"losses":losses,
+          "delta_unique_pp":round(100*sum(diffs)/len(diffs),3),
+          "ci95_unique_pattern_bootstrap_pp":[round(boots[49],3),round(boots[1949],3)]}
     result={"schema":"wikidata-december-concentration-v1",
       "source_sha256":sha,"n_requests":len(test),"n_novel_requests":total,
       "n_unique_novel_patterns":len(counts),
       "top1_share_pct":round(100*counts.most_common(1)[0][1]/total,3),
+      "paired_unique_patterns":winloss,
       "top10_share_pct":round(100*sum(v for _,v in counts.most_common(10))/total,3),
       "top10":[{"pattern":[selected[i] for i in q],"count":count,
                 "by_beta":{str(b):span(q,preds[b]) for b in preds}}
