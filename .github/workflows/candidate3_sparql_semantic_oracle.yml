@@ -1,0 +1,21 @@
+name: Candidate 3 W3C-safe original SPARQL semantic oracle adversarial tests
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_sparql_semantic_oracle.yml'
+      - 'research/bridge_partition/candidate3_sparql_semantic_oracle.py'
+      - 'research/bridge_partition/test_candidate3_sparql_semantic_oracle.py'
+  workflow_dispatch:
+jobs:
+  semantic-invariants:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install RDF/SPARQL 1.1 grammar and graph-isomorphism evaluator
+        run: pip install rdflib==7.5.0
+      - name: Adversarial duplicate-row LIMIT blank-node-bijection literal tests
+        run: python -u research/bridge_partition/test_candidate3_sparql_semantic_oracle.py
