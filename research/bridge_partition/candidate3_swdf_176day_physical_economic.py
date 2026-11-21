@@ -30,6 +30,7 @@ import candidate3_source_identity_worker as worker
 import candidate3_swdf_real_full_sparql_economics as planner
 import candidate3_nyt_full_real_e2e as queries
 from candidate3_sparql_semantic_certifier import certify
+import candidate3_temporal_economic_audit as temporal_audit
 
 OUT=Path("results_candidate3_SWDF_176day_physical_economics")
 OUT.mkdir(exist_ok=True)
@@ -143,8 +144,19 @@ def get_dated_sample(sourcepath,predicates):
     for name in sampled:
         sampled[name].sort(key=lambda r:(r["day"],r["priority_sha256"]))
     assert counts and len(sampled["test"])>=20
+    # Novelty labels use ALL preceding eligible source records, not merely the
+    # sampled preceding queries. This does not consult future test outcomes.
+    prior_exact=(seen_exact["train"] | seen_exact["construction"] |
+                 seen_exact["calibration"])
+    prior_families=(seen_family["train"] | seen_family["construction"] |
+                    seen_family["calibration"])
+    for r in sampled["test"]:
+        r["new_exact"] = r["text_hash"] not in prior_exact
+        fam_hash = hashlib.sha256(json.dumps(r["family"]).encode()).hexdigest()
+        r["new_family"] = fam_hash not in prior_families
     summary={"source_raw_SHA256":SOURCE_SHA,
       "calendar_days":{"train":88,"construction":17,"calibration":18,"test":53},
+      "heldout_calendar_days":days[123:],
       "observed_exact_eligible_occurrences_by_split":{
           label:sum(n for d,n in counts.items() if which[d]==label)
           for label in sampled},
@@ -190,6 +202,9 @@ def safe_stage(original_rows,base_route,base_ports,alt_route,alt_ports,fragmente
                 correct+=1
                 nonempty+=base["response_rows"]>0
                 series.append({"day":r["day"],"hash":r["text_hash"],
+                    "occurrence_key":r["priority_sha256"],
+                    "new_exact":bool(r.get("new_exact",False)),
+                    "new_family":bool(r.get("new_family",False)),
                     "saving_ms":base["wall_ms"]-alt["wall_ms"],
                     "baseline_ms":base["wall_ms"],"alternative_ms":alt["wall_ms"],
                     "traffic_TCP_RDF_bytes_saved":base["tcp_payload_bytes"]-alt["tcp_payload_bytes"],
@@ -315,7 +330,21 @@ def main():
                     seed=SEED+901+len(name),strict_stop=False)
                 economic=summarize_day_blocks(test,daycounts,
                     moved["wall_clock_migration_and_index_update_ms"])
+                # Preserve the anonymized paired timings so third parties can
+                # independently audit p95, within-day sampling, and temporal
+                # dependence. Never export query literals or client IPs.
+                keys=("day","occurrence_key","saving_ms","baseline_ms",
+                      "alternative_ms","new_exact","new_family")
+                audited_rows=[{k:rec[k] for k in keys}
+                              for rec in test["paired_records"]]
+                independent_audit=temporal_audit.audit(
+                    audited_rows,daycounts,source_audit["heldout_calendar_days"],
+                    migration_ms=moved["wall_clock_migration_and_index_update_ms"],
+                    semantics_pass=test["all_original_queries_semantically_valid"],
+                    repeats=N_REPEATS,sample_per_day=PER_DAY)
                 result[name]={"movement":moved,
+                    "deidentified_temporal_test_paired_rows":audited_rows,
+                    "independent_temporal_accounting":independent_audit,
                     "original_calibration":{k:v for k,v in cal.items() if k!="paired_records"},
                     "original_temporal_test":{k:v for k,v in test.items() if k!="paired_records"},
                     "economic":economic,
