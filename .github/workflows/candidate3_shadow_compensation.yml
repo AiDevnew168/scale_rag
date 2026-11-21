@@ -1,0 +1,32 @@
+name: Candidate 3 compositional-shadow two-swap risk compensator
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_shadow_compensation.yml'
+      - 'research/bridge_partition/candidate3_shadow_compensation.py'
+  workflow_dispatch:
+jobs:
+  shadow-compensation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        month: [january, february, march]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned data and partition dependencies
+        run: pip install numpy==2.1.3 pymetis==2025.2.2 mtkahypar==1.7.1 scikit-learn==1.6.1
+      - name: Select day0-only two-swap compensator with June-only shadow pairs
+        env:
+          CSC_MONTH: ${{ matrix.month }}
+        run: python -u research/bridge_partition/candidate3_shadow_compensation.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-shadow-comp-${{ matrix.month }}
+          path: results_candidate3_CSC_${{ matrix.month }}/report.json
+          if-no-files-found: error
