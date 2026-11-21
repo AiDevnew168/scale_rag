@@ -21,6 +21,7 @@ def run():
     fragment=Store()
     raw=b"".join(pred[RDFTYPE])+b"".join(pred[DTSTART])
     fragment.bulk_load(input=raw,format=RdfFormat.N_TRIPLES)
+    serial=Store();serial.load(input=raw,format=RdfFormat.N_TRIPLES)
     q1=f"SELECT ?obj WHERE {{ ?obj {RDFTYPE} {CLASS} }} LIMIT 20"
     q2=f"SELECT ?obj ?targetObj WHERE {{ ?obj {RDFTYPE} {CLASS} . ?obj {DTSTART} ?targetObj }} LIMIT 20"
     q3=f"SELECT ?obj ?targetObj ?typ WHERE {{ ?obj {RDFTYPE} {CLASS} . ?obj {DTSTART} ?targetObj . ?targetObj {RDFTYPE} ?typ }} LIMIT 20"
@@ -30,13 +31,13 @@ def run():
     comparison={}
     for name,q in queries.items():
         item={}
-        for gname,g in (("full",full),("fragment",fragment)):
+        for gname,g in (("full",full),("fragment_bulk_load",fragment),("fragment_serial_load",serial)):
             names,rows=solution_rows(g,q)
             item[gname]={"rows":len(rows),"first5":rows[:5]}
         comparison[name]=item
     result={"schema":"candidate3-SWDF-blanknode-3pattern-join-failure-root-v1",
       "source_exact_SHA":"97575d036db4e55fa89f25231d3afb2c427555bce4a60fc429f902ddf7c45400",
-      "full_graph_triples":len(full),"fragment_graph_triples":len(fragment),
+      "full_graph_triples":len(full),"fragment_graph_triples":len(fragment),"serial_load_triples":len(serial),
       "original_2predicate_NTriples_bytes":len(raw),
       "full_queries_were_not_heldout":True,
       "comparisons":comparison,
