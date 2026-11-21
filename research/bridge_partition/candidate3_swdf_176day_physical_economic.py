@@ -270,6 +270,50 @@ def summarize_day_blocks(stage,counts,move_ms):
        "n_calendar_day_blocks":len(keys),
        "per_day_stratified_weights_documented":True}
 
+def target_engine_syntax_gate(sampled):
+    """Post-freeze empty-store target-engine check; NEVER drops failed requests.
+
+    This is an engineering safeguard added *after* the historical holdout was
+    inspected. Its outcomes cannot restore confirmatory status for that holdout.
+    No original query text or private access-log information is emitted.
+    """
+    probe=Store()
+    checked={}
+    bad=collections.Counter()
+    examples=[]
+    total=collections.Counter()
+    for split in ("train","construction","calibration","test"):
+        for row in sampled[split]:
+            total[split]+=1
+            h=row["text_hash"]
+            if h not in checked:
+                try:
+                    probe.query(row["query"])
+                    checked[h]={"ok":True}
+                except Exception as exc:
+                    checked[h]={"ok":False,"type":type(exc).__name__,
+                        "prefix_not_found":"prefix not found" in str(exc).lower()}
+            status=checked[h]
+            if not status["ok"]:
+                bad[split]+=1
+                if len(examples)<12:
+                    examples.append({"split":split,"day":row["day"],"query_sha256":h,
+                        "exception_type":status["type"],
+                        "prefix_not_found":status["prefix_not_found"]})
+    return {"schema":"candidate3-postfreeze-target-engine-syntax-gate-v1",
+        "all_original_query_texts_engine_executable":
+            not any(not x["ok"] for x in checked.values()),
+        "unique_query_texts_probed":len(checked),
+        "original_sample_occurrences_by_split":dict(total),
+        "engine_incompatible_sample_occurrences_by_split":dict(bad),
+        "engine_incompatible_unique_texts":sum(not v["ok"] for v in checked.values()),
+        "bounded_anonymous_examples":examples,
+        "queried_empty_reference_store_without_original_RDF":True,
+        "benchmark_original_query_texts_never_modified":True,
+        "original_53day_holdout_already_seen_in_prior_runs":True,
+        "journal_confirmatory_status_restored":False}
+
+
 def main():
     started=time.perf_counter()
     graph,bypred,weights,packs,loads,route,cap=load_real_source()
@@ -306,6 +350,29 @@ def main():
     decision_hash=hashlib.sha256(decision.read_bytes()).hexdigest()
     print("ORIGINAL_2014_SWDF_ACTIONS_FROZEN_BEFORE_TEST",decision_hash,flush=True)
     del rawpath
+    # Fail *before* expensive worker construction when target Oxigraph cannot
+    # execute every frozen source query. This neither changes the sampled
+    # cohort nor pretends a repaired 2014 trial is confirmatory.
+    syntax_gate=target_engine_syntax_gate(requested)
+    (OUT/"target_engine_syntax_gate.json").write_text(
+        json.dumps(syntax_gate,indent=2))
+    if not syntax_gate["all_original_query_texts_engine_executable"]:
+        OUT.joinpath("report.json").write_text(json.dumps({
+            "schema":"candidate3-original-SWDF-target-engine-incompatibility-block-v1",
+            "status":"FAIL_CLOSED_ORIGINAL_SPARQL_ENGINE_INCOMPATIBILITY",
+            "frozen_decision_SHA256_before_ANY_test_answer":decision_hash,
+            "selected_real_policy":"no_move",
+            "original_source_eligible_counts":
+                source_audit["observed_exact_eligible_occurrences_by_split"],
+            "engine_syntax_gate":syntax_gate,
+            "whole_53day_original_cohort_economic_result":"INVALID",
+            "any_alternative_economic_gain_claimed":False,
+            "no_heldout_query_removed_or_repaired":True,
+            "journal_GO":False},indent=2))
+        print("ENGINE_SYNTAX_GATE_FAIL_CLOSED",
+              json.dumps(syntax_gate),flush=True)
+        raise RuntimeError("Frozen original SPARQL target engine incompatibility; "
+                           "physical economics blocked, see audited artifact")
     central=Store()
     central.load(input=graph,format=RdfFormat.N_TRIPLES)  # Preserve cross-predicate blank-node joins
     del graph
