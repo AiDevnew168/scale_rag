@@ -1,0 +1,24 @@
+name: Candidate 3 external real SWDF SPARQL query parser format
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_swdf_query_format.yml'
+      - 'research/bridge_partition/candidate3_swdf_query_format.py'
+  workflow_dispatch:
+jobs:
+  metadata:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Read only 4KB source prefix for deterministic parser specification
+        run: python -u research/bridge_partition/candidate3_swdf_query_format.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-SWDF-query-format
+          path: results_candidate3_SWDF_query_format/report.json
+          if-no-files-found: error
