@@ -16,7 +16,7 @@ import candidate3_source_identity_worker as workers
 from candidate3_sparql_semantic_certifier import characterize,solution_rows
 
 HASHES={
- "33e783e4abeee06f53cde08782d8fe9f93b8a12f6bd2501e397f0fbb1214bab",
+ "33e783e4abeee06f53cde08782d8fe9f93b8a12f6dbe2501e397f0fbb1214bab",
  "38e0d2ce07a5c87e75a6070993f35e4b12bb2675d510853f713f60ca1022b4bc",
  "489709172858844dc73cbe4a54d0e0da0686063f19ac2018802f023537949efb",
  "72b094d60adfda9c6d4ae6e574635290a9b8d991ec7a510926872b745ef07d51"
