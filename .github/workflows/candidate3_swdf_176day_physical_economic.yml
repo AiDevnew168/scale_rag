@@ -30,4 +30,5 @@ jobs:
           path: |
             results_candidate3_SWDF_176day_physical_economics/report.json
             results_candidate3_SWDF_176day_physical_economics/decision_frozen_before_test.json
+            results_candidate3_SWDF_176day_physical_economics/target_engine_syntax_gate.json
           if-no-files-found: warn
