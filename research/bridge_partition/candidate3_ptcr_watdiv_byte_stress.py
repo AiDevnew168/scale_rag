@@ -46,7 +46,7 @@ def select_first_under_same_budget(original,weights,loads,cap,day0):
     patterns=Counter(r["pattern"] for r in day0)
     baseline={p:wd.span(original,p) for p in patterns}
     available=sorted(p for p,loc in original.items() if len(loc)==1)
-    best=(0,None,None)
+    best=(0,0,None)
     valid=0
     for idx,p in enumerate(available):
         for q in available[idx+1:]:
