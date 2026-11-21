@@ -76,13 +76,20 @@ def main():
         reports.append(result)
         print("QUERY_PREFLIGHT_PROGRESS",json.dumps(result),flush=True)
     s=Counter(d["status"] for d in reports)
+    query_hashes=[hashlib.sha256(q.encode("utf8")).hexdigest() for q in queries]
+    split_overlap=set(query_hashes[:20]) & set(query_hashes[20:])
+    repeat_groups={h:[i for i,x in enumerate(query_hashes) if x==h] for h in set(query_hashes)}
     nonempty=[x["qid"] for x in reports if x["status"]=="complete" and x["rows"]>0]
     summary={"schema":"candidate3-real-oxigraph-central-query-preflight-v1",
       "source_archive_sha256":core.EXPECTED_SHA,"static_triples_raw":static,
       "static_plus_stream_triples_raw":ntrips,
       "unique_triples_in_oxigraph":exact_count,
       "ntriples_serialized_bytes":len(data),
-      "query_templates":len(queries),"query_timeout_sec":QUERY_TIMEOUT_SEC,
+      "query_templates":len(queries),
+      "query_identity_audit":{"unique_exact_templates":len(set(query_hashes)),
+         "train_first20_vs_test_last20_exact_hash_overlap":len(split_overlap),
+         "duplicate_groups":[v for v in repeat_groups.values() if len(v)>1]},
+      "query_timeout_sec":QUERY_TIMEOUT_SEC,
       "row_cap":ROW_CAP,"status_counts":dict(s),"nonempty_complete_query_ids":nonempty,
       "query_results":reports,"elapsed_sec":round(time.perf_counter()-start,2),
       "limitations":[
