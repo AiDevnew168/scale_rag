@@ -1,0 +1,29 @@
+name: Candidate 3 original SWDF prefix-engine compatibility forensic (no heldout retuning)
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_swdf_original_prefix_forensics.yml'
+      - 'research/bridge_partition/candidate3_swdf_original_prefix_forensics.py'
+      - 'research/bridge_partition/test_candidate3_swdf_original_prefix_forensics.py'
+  workflow_dispatch:
+jobs:
+  pinned-query-target-engine-parser-diagnosis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install exact physical-run parser versions
+        run: pip install pyoxigraph==0.5.13 rdflib==7.5.0 gdown==5.2.0 remotezip==0.12.3
+      - name: Test parser compatibility diagnosis on synthetic inputs only
+        run: python -m unittest research/bridge_partition/test_candidate3_swdf_original_prefix_forensics.py -v
+      - name: Inspect only original failed-query SHA on pinned original access log, never expose query or client IP
+        run: python -u research/bridge_partition/candidate3_swdf_original_prefix_forensics.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-original-query-prefix-parser-forensics
+          path: results_candidate3_SWDF_176day_prefix_forensics/report.json
+          if-no-files-found: warn
