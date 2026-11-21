@@ -1,0 +1,24 @@
+name: Candidate 3 true-byte WatDiv10M unseen query-pattern fivefold
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_official_watdiv_pattern_folds.yml'
+      - 'research/bridge_partition/candidate3_official_watdiv_pattern_folds.py'
+  workflow_dispatch:
+jobs:
+  pattern-disjoint-real-graph:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Five strict pattern-family heldouts on original 10.9M triples and measured predicate bytes
+        run: python -u research/bridge_partition/candidate3_official_watdiv_pattern_folds.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-WatDiv10M-pattern-disjoint-folds
+          path: results_candidate3_watdiv_pattern_disjoint/report.json
+          if-no-files-found: error
