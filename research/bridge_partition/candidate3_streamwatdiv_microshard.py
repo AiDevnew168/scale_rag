@@ -127,6 +127,13 @@ def migrate_payload(pair,pred):
 def main():
     with read_archive() as z:
         lines=z.read("static.nt").splitlines(keepends=True)
+        static_line_count=len(lines)
+        event_line_count=0
+        for event_line in z.read("stream-events.jsonl").splitlines():
+            event=json.loads(event_line)
+            event_line_count+=1
+            for triple in event.get("triples",[]):
+                lines.append(triple.encode("utf8")+b"\\n")
         raw=z.read("queries.sparql").decode("utf8")
     pred,siz,heavy,chunks,part,balances,cap,impossible=disk_layout(lines)
     query_lines=[x.strip() for x in raw.splitlines() if x.strip().startswith("SELECT")]
@@ -136,7 +143,17 @@ def main():
     midpoint=max(1,len(known)//2)
     train,test=known[:midpoint],known[midpoint:]
     print("QUERY_COUNTS",len(query_lines),"parse_patterns",len(queries),"usable",len(known),"missing_predicate_keys",len(unknown),"head",queries[:2],flush=True)
-    assert len(known)>=2 and len(test)>0, "Not enough complete static-query templates; do not manufacture locality"
+    if len(known)<2 or len(test)==0:
+        report={"schema":"candidate3-independent-physical-microshard-v1",
+          "status":"blocked_insufficient_complete_query_templates",
+          "templates":len(query_lines),"usable":len(known),
+          "static_triples":static_line_count,"stream_events":event_line_count,
+          "combined_static_plus_all_stream_triples":len(lines),
+          "unknown_predicates":dict(unknown),
+          "no_physical_economic_conclusion":True}
+        OUT.joinpath("report.json").write_text(json.dumps(report,indent=2))
+        print("MICROSHARD_GATE_START");print(json.dumps(report,indent=2));print("MICROSHARD_GATE_END")
+        return
     baseline=gate(test,part,heavy)
     res={}
     for crit in ("maximize_observed","gain_per_byte"):
@@ -151,7 +168,8 @@ def main():
             "saved_extra_shard_touches_heldout":baseline["extra_shard_touches"]-after["extra_shard_touches"],
             "transfer":migrate_payload(pair,pred)}
     report={"schema":"candidate3-independent-physical-microshard-v1",
-        "archive_sha256":EXPECTED_SHA,"static_rdf_ntriples":len(lines),
+        "archive_sha256":EXPECTED_SHA,"static_rdf_ntriples":static_line_count,
+        "stream_events":event_line_count,"combined_static_and_stream_triples":len(lines),
         "static_rdf_bytes":sum(siz.values()),
         "predicates":len(siz),"heavy_predicate":heavy,"heavy_predicate_bytes":siz[heavy],
         "indivisible_byte_balancing_impossible":impossible,
@@ -167,6 +185,7 @@ def main():
           "Train/test halves of a tiny template sample: NOT an independent large-scale confirmation",
           "Unbound heavy predicate routed conservatively to all 4 shards",
           "RDF physical transfer measured as verified TCP loopback payload only",
+          "All stream triples collected into physical payload at once for feasibility only, not chronological execution",
           "No SPARQL join execution, real server routing, queuing, capacity provision, CPU accounting",
           "Rebalancing heavy fragments and index rebuilding not included in migration cost",
           "No evidence of algorithmic novelty, production net savings or GraphRAG quality"] }
