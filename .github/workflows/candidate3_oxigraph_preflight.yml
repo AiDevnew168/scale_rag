@@ -1,0 +1,26 @@
+name: Candidate 3 full SPARQL answer preflight with Oxigraph
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_oxigraph_preflight.yml'
+      - 'research/bridge_partition/candidate3_oxigraph_preflight.py'
+  workflow_dispatch:
+jobs:
+  original-query-engine-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned RDF engine
+        run: pip install pyoxigraph==0.5.13
+      - name: Run actual SPARQL queries with individual query timeout
+        run: python research/bridge_partition/candidate3_oxigraph_preflight.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-oxigraph-real-query-preflight
+          path: results_candidate3_oxigraph_preflight/report.json
+          if-no-files-found: warn
