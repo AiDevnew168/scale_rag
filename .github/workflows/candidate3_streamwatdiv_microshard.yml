@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - '.github/workflows/candidate3_streamwatdiv_microshard.yml'
+      - 'research/bridge_partition/candidate3_streamwatdiv_microshard.py'
   workflow_dispatch:
 jobs:
   microshard:
