@@ -1,0 +1,26 @@
+name: Candidate 3 paired full-SPARQL true-query 4-shard A/B
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_paired_full_sparql.yml'
+      - 'research/bridge_partition/candidate3_paired_full_sparql.py'
+  workflow_dispatch:
+jobs:
+  randomized-paired-sparql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Pin RDF engine
+        run: pip install pyoxigraph==0.5.13
+      - name: Run randomized paired A/B, serial and parallel, query-cluster uncertainty
+        run: python -u research/bridge_partition/candidate3_paired_full_sparql.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-full-sparql-4shard-paired-ab
+          path: results_candidate3_paired_sparql/report.json
+          if-no-files-found: warn
