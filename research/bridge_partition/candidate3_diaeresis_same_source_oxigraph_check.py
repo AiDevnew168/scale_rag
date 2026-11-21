@@ -47,11 +47,12 @@ def parse_spark_results():
     return by_query
 
 def main():
-    assert RAW.is_file() and RAW.stat().st_size==51587578,(RAW,RAW.exists())
+    assert RAW.is_file() and RAW.stat().st_size==51587758,(RAW,RAW.exists())
     author_results=parse_spark_results()
     names=["query_0.txt","query_1.txt","query_2.txt"]
     assert sorted(author_results)==names,(author_results.keys(),names)
     raw=RAW.read_bytes();sha=hashlib.sha256(raw).hexdigest()
+    assert sha=="ea2b8ac2e06bdf6f6d8aa2f64178dfb02fe9fb6a32343e2bde63f133c74bf034"
     central=Store()
     central.load(input=raw,format=RdfFormat.N_TRIPLES)
     pred=collections.defaultdict(list);sizes=collections.Counter()
@@ -69,7 +70,9 @@ def main():
     result={"schema":"candidate3-real-author-DIAERESIS-vs-Oxigraph-same-source-query-check-v1",
       "author_original_commit":"22dfe190078973f644f5d6279181e54ec116f6e3",
       "author_full_original_three_stages_already_completed":True,
-      "source_author_RDF_unmodified_sha256":sha,
+      "source_author_RDF_original_unmodified_sha256":"662e93b311eb93f91741b910bd427bf6179e3c66706f41e20bf46b4b620733cb",
+      "source_author_RDF_normalized_common_input_sha256":sha,
+      "normalization_scope":"27 modified lines / 28 replacement-glyph RDF IRIs percent-encoded, no triple lines dropped; SAME normalized file supplied to BOTH systems",
       "source_author_original_triple_lines":len(raw.splitlines()),
       "source_author_oxigraph_unique_triples":len(central),
       "per_shard_raw_byte_cap":cap,
