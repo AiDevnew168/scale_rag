@@ -5,6 +5,7 @@ on:
       - '.github/workflows/candidate3_sparql_semantics.yml'
       - 'research/bridge_partition/candidate3_sparql_semantic_certifier.py'
       - 'research/bridge_partition/test_candidate3_sparql_semantics.py'
+      - 'research/bridge_partition/candidate3_feasible_raw_swdf_dated_source.py'
   workflow_dispatch:
 jobs:
   strict-semantics:
@@ -19,3 +20,22 @@ jobs:
         run: pip install pyoxigraph==0.5.13 rdflib==7.5.0
       - name: Conservative original SPARQL test matrix - no false semantic PASS
         run: python -u research/bridge_partition/test_candidate3_sparql_semantics.py
+
+  original-dated-swdf-source-eligibility:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Original author dated SWDF.log.gz no-future-peek source audit
+        run: |
+          pip install gdown==5.2.0
+          python -u research/bridge_partition/candidate3_feasible_raw_swdf_dated_source.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-original-dated-SWDF-provenance
+          path: results_candidate3_raw_swdf_provenance/report.json
+          if-no-files-found: error
