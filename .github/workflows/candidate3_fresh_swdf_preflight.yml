@@ -1,0 +1,24 @@
+name: Candidate 3 preregistered independent real SWDF source audit
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_fresh_swdf_preflight.yml'
+      - 'research/bridge_partition/candidate3_fresh_swdf_preflight.py'
+  workflow_dispatch:
+jobs:
+  immutable-source-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Fetch only frozen genuine source and inspect full RDF dump candidates
+        run: python -u research/bridge_partition/candidate3_fresh_swdf_preflight.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-preregistered-SWDF-eligible-source
+          path: results_candidate3_fresh_swdf/report.json
+          if-no-files-found: error
