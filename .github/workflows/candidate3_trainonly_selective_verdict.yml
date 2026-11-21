@@ -1,0 +1,18 @@
+name: Candidate 3 train-only physical economic verdict invariants (no real test set)
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_trainonly_selective_verdict.yml'
+      - 'research/bridge_partition/candidate3_trainonly_selective_fetch_verdict.py'
+      - 'research/bridge_partition/test_candidate3_trainonly_selective_fetch_verdict.py'
+  workflow_dispatch:
+jobs:
+  guarded-exploratory-scoring:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m unittest research/bridge_partition/test_candidate3_trainonly_selective_fetch_verdict.py -v
