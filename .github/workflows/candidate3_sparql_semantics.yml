@@ -1,0 +1,21 @@
+name: Candidate 3 independent SPARQL semantic correctness oracle
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_sparql_semantics.yml'
+      - 'research/bridge_partition/candidate3_sparql_semantic_certifier.py'
+      - 'research/bridge_partition/test_candidate3_sparql_semantics.py'
+  workflow_dispatch:
+jobs:
+  strict-semantics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Pin RDF libraries and SPARQL evaluator
+        run: pip install pyoxigraph==0.5.13 rdflib==7.5.0
+      - name: Conservative original SPARQL test matrix - no false semantic PASS
+        run: python -u research/bridge_partition/test_candidate3_sparql_semantics.py
