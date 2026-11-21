@@ -1,0 +1,26 @@
+name: Candidate 3 authentic DIAERESIS query118 2-row source forensic
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_diaeresis_query118_source_audit.yml'
+      - 'research/bridge_partition/candidate3_diaeresis_query118_source_audit.py'
+  workflow_dispatch:
+jobs:
+  fixed-source-count-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install minimal pinned original source parser
+        run: pip install pyoxigraph==0.5.13
+      - name: Count unmodified query118 original and normalized RDF assertions
+        run: python -u research/bridge_partition/candidate3_diaeresis_query118_source_audit.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-DIAERESIS-original-query118-integrity
+          path: results_candidate3_diaeresis_query118_integrity/report.json
+          if-no-files-found: error
