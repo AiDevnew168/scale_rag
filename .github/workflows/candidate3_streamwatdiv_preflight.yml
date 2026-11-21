@@ -1,0 +1,23 @@
+name: Candidate 3 new Stream WatDiv RDF byte-capacity preflight
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_streamwatdiv_preflight.yml'
+  workflow_dispatch:
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Audit independently released RDF/SPARQL archive
+        run: python research/bridge_partition/candidate3_streamwatdiv_preflight.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-streamwatdiv-preflight
+          path: results_candidate3_streamwatdiv_preflight/
+          if-no-files-found: error
