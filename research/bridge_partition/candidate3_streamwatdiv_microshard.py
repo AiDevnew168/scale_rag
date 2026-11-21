@@ -135,7 +135,8 @@ def main():
     known=[q for q in queries if q and all(p in siz for p in q)]
     midpoint=max(1,len(known)//2)
     train,test=known[:midpoint],known[midpoint:]
-    assert len(known)>=10 and len(test)>0
+    print("QUERY_COUNTS",len(query_lines),"parse_patterns",len(queries),"usable",len(known),"missing_predicate_keys",len(unknown),"head",queries[:2],flush=True)
+    assert len(known)>=2 and len(test)>0, "Not enough complete static-query templates; do not manufacture locality"
     baseline=gate(test,part,heavy)
     res={}
     for crit in ("maximize_observed","gain_per_byte"):
