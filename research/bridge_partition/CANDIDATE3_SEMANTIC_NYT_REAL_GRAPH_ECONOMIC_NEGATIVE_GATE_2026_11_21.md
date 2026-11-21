@@ -73,3 +73,17 @@ Faithful original unmodified Scala Spark/DAP → QueryTranslator → QueryProces
 - **BLOCKED**: independent real-user, timestamped, source-aligned RDF/SPARQL time-series drift and real cross-machine economics.
 
 The high-quality journal method still requires a formal and empirically well-calibrated positive-net action admission (no-move, migration, replica, hybrid) evaluated without test leakage in **actual new real traffic**, and an authentic published baseline runtime using equivalent original data and budget. This stage advanced system correctness/measurement but did not prove novelty or profit.
+
+## Verified final SWDF semantic root-cause correction: PASS 84/84 x 4
+
+After the physically isolated three-BGP comparison proved identical source fragments yield `rdf:type` to `ical:dtstart` blank-node join 0 under `Store.bulk_load` and 1 under `Store.load`, the full four-independent-Oxigraph-worker coordinator switched to **`Store.load`** on the combined raw N-Triples predicate fragments. All original queries were preserved unchanged; the W3C-conservative separate unsliced truth was used only for legality proof.
+
+**Successful CI, no excluded failures:** https://github.com/AiDevnew168/scale_rag/actions/runs/44880920149. On all 84 original calibration queries:
+- no_move **84 PASS, 0 FAIL**
+- one_swap **84 PASS, 0 FAIL**, actual physical RDF transfer+index barrier **24.7101ms**
+- replica_only **84 PASS, 0 FAIL**, actual barrier **10.9699ms**
+- swap_replica **84 PASS, 0 FAIL**, actual barrier **35.6527ms**.
+
+Previous intermediate CI 44880816020 incorrectly reported zero passing after a Python comment introduced literal backslash-n escapes that commented out the intended `Store.load` call. That coding defect was corrected in commit `026e09aa0cae74e0660a51ed095c5648c0c8239a`; prior failure is preserved, not hidden. 44880920149 is the successful retest.
+
+This proves **semantic correctness on the fully specified SWDF calibration subset** at unchanged SPARQL query semantics, with actual TCP workers and unmodified total RDF source byte membership. It does **NOT** independently confirm SWDF heldout (already previously opened), actual multi-host operation, nor a newly successful economic controller. The NYT fresh external engineering A/B continues to show negative real net savings, preserving the paper-level economic NO-GO.
