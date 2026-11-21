@@ -1,0 +1,24 @@
+name: Candidate 3 exact-query hash-disjoint heldout audit
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_exact_disjoint_gate.yml'
+      - 'research/bridge_partition/candidate3_exact_disjoint_gate.py'
+  workflow_dispatch:
+jobs:
+  disjoint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Correct the overlapping query-template holdout
+        run: python research/bridge_partition/candidate3_exact_disjoint_gate.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-exact-disjoint-control
+          path: results_candidate3_exact_disjoint/report.json
+          if-no-files-found: error
