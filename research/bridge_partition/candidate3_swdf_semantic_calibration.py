@@ -33,7 +33,7 @@ def execute_sharded(raw_query,pattern,route,ports,frag):
         parts=list(pool.map(fetch,sorted(grouping.items())))
     data=b"".join(part for _,part in parts)
     rdf=Store()
-    rdf.bulk_load(input=data,format=RdfFormat.N_TRIPLES)
+    # Serial load preserves cross-predicate RDF blank-node joins;\n    # prior bulk_load produced 0 instead of 1 on four known calibration cases.\n    rdf.load(input=data,format=RdfFormat.N_TRIPLES)
     result={"index":rdf,"wall_ms":(time.perf_counter()-start)*1000,
            "actual_fragment_bytes":len(data),"shard_contacts":len(parts)}
     return result
