@@ -91,12 +91,15 @@ def main():
               "JAVA_TOOL_OPTIONS":"-Djava.net.preferIPv4Stack=true",
               "SPARK_SUBMIT_OPTS":"-Xmx4g"})
         assert "SPARK_HOME" in env and Path(env["SPARK_HOME"]).exists(), "Spark not installed"
+        confdir=BASE/"hadoopconf";confdir.mkdir(exist_ok=True)
+        (confdir/"core-site.xml").write_text('<?xml version="1.0" encoding="UTF-8"?>\n<configuration><property><name>fs.defaultFS</name><value>file:///</value></property></configuration>\n')
+        env["HADOOP_CONF_DIR"]=str(confdir)
         bindir=BASE/"bin";bindir.mkdir(exist_ok=True)
         hdfs=bindir/"hdfs"
         hdfs.write_text("""#!/usr/bin/env bash
 set -e
 if [[ "${1:-}" == "dfs" ]]; then shift; fi
-exec "$JAVA_HOME/bin/java" -cp "$SPARK_HOME/jars/*" org.apache.hadoop.fs.FsShell "$@"
+exec "$JAVA_HOME/bin/java" -cp "$HADOOP_CONF_DIR:$SPARK_HOME/jars/*" org.apache.hadoop.fs.FsShell "$@"
 """)
         hdfs.chmod(0o755)
         env["PATH"]=str(bindir)+os.pathsep+env["SPARK_HOME"]+"/bin"+os.pathsep+env["PATH"]
