@@ -44,16 +44,21 @@ def check_fragments(roles,by_pred,loc,ports):
     checks=[]
     for p in relevant:
         original=b"".join(by_pred[p])
-        received=b""
+        copies=[]
         for j in sorted(loc[p]):
             raw,ms=engine.call(ports[j],"/raw-fragments",
                 json.dumps({"predicates":[p]}).encode(),
                 {"Content-Type":"application/json"},timeout=80)
-            received+=raw
+            copies.append(raw)
+        # This SWDF layout has no fragmented predicates. Multiple owners
+        # therefore represent identical full replicas, NOT split fragments.
+        exact=all(copy==original for copy in copies)
         checks.append({
             "predicate_sha256":hashlib.sha256(p.encode()).hexdigest(),
-            "exact_original_NTriples_payload":received==original,
-            "source_bytes":len(original),"received_bytes":len(received)})
+            "exact_original_NTriples_payload":exact,
+            "n_physical_replicas":len(copies),
+            "source_bytes":len(original),
+            "received_physical_bytes":sum(len(copy) for copy in copies)})
     return {"n_calibration_relevant_predicates":len(checks),
        "n_exact_original_payload":sum(r["exact_original_NTriples_payload"] for r in checks),
        "failed_hashes":[r["predicate_sha256"] for r in checks
