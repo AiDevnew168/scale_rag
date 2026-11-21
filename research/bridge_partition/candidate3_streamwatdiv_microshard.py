@@ -32,25 +32,30 @@ def disk_layout(items):
         pred[p].append(ln);siz[p]+=len(ln)
     total=sum(siz.values());mean=total/4;cap=1.1*mean
     biggest=max(siz,key=siz.get)
-    # If kept indivisible, impossible to balance when this is > cap.
     impossible=siz[biggest]>cap
-    heavy=[bytearray() for _ in range(4)]
-    for ln in pred[biggest]:
-        idx=min(range(4),key=lambda i:len(heavy[i]))
-        heavy[idx].extend(ln)
-    balances=[len(h) for h in heavy]
-    placement={}
+    placement={};split_routes={}
+    balances=[0]*4
     for p,n in sorted(siz.items(),key=lambda pair:(-pair[1],pair[0])):
-        if p==biggest:continue
-        j=min(range(4),key=lambda i:(balances[i],i))
-        placement[p]=j;balances[j]+=n
-    return pred,siz,biggest,heavy,placement,balances,cap,impossible
+        shard=min(range(4),key=lambda i:(balances[i],i))
+        if balances[shard]+n<=cap:
+            placement[p]=shard;balances[shard]+=n
+            continue
+        # Keep triple lines complete while splitting an indivisible predicate ID.
+        per=Counter()
+        for ln in pred[p]:
+            target=min(range(4),key=lambda i:(balances[i],i))
+            balances[target]+=len(ln)
+            per[target]+=len(ln)
+        split_routes[p]=dict(per)
+    assert len(placement)+len(split_routes)==len(siz)
+    assert max(balances)<=cap,(balances,cap)
+    return pred,siz,biggest,split_routes,placement,balances,cap,impossible
 
-def spans(query,part,heavy):
+def spans(query,part,split_routes):
     destinations=set()
     for p in query:
-        if p==heavy:
-            destinations.update(range(4))
+        if p in split_routes:
+            destinations.update(split_routes[p].keys())
         else:
             destinations.add(part[p])
     return len(destinations)
@@ -135,7 +140,7 @@ def main():
             for triple in event.get("triples",[]):
                 lines.append(triple.encode("utf8")+b"\n")
         raw=z.read("queries.sparql").decode("utf8")
-    pred,siz,heavy,chunks,part,balances,cap,impossible=disk_layout(lines)
+    pred,siz,heavy,split_routes,part,balances,cap,impossible=disk_layout(lines)
     query_lines=[x.strip() for x in raw.splitlines() if x.strip().startswith("SELECT")]
     queries=[tuple(sorted(set(TRIP.findall(q)))) for q in query_lines]
     unknown=Counter(p for q in queries for p in q if p not in siz)
@@ -154,15 +159,15 @@ def main():
         OUT.joinpath("report.json").write_text(json.dumps(report,indent=2))
         print("MICROSHARD_GATE_START");print(json.dumps(report,indent=2));print("MICROSHARD_GATE_END")
         return
-    baseline=gate(test,part,heavy)
+    baseline=gate(test,part,split_routes)
     res={}
     for crit in ("maximize_observed","gain_per_byte"):
-        pair,info,nvalid=optimize(train,part,siz,heavy,balances,cap,crit)
+        pair,info,nvalid=optimize(train,part,siz,split_routes,balances,cap,crit)
         modified=part.copy()
         if pair:
             a,b=part[pair[0]],part[pair[1]]
             modified[pair[0]],modified[pair[1]]=b,a
-        after=gate(test,modified,heavy)
+        after=gate(test,modified,split_routes)
         res[crit]={"pair":pair,"selection_info":info,"byte_feasible_swap_count":nvalid,
             "heldout_test":after,
             "saved_extra_shard_touches_heldout":baseline["extra_shard_touches"]-after["extra_shard_touches"],
@@ -175,7 +180,8 @@ def main():
         "indivisible_byte_balancing_impossible":impossible,
         "hard_shard_byte_cap":cap,"fragmented_shard_bytes":balances,
         "fragmentation_feasible":max(balances)<=cap,
-        "heavy_chunks_bytes":[len(x) for x in chunks],
+        "split_predicate_count":len(split_routes),
+        "split_predicate_routes_bytes":split_routes,
         "SPARQL_templates_found":len(query_lines),
         "usable_query_patterns":len(known),
         "unmatched_predicates":dict(unknown),
@@ -183,7 +189,7 @@ def main():
         "heldout_baseline":baseline,"options":res,
         "limitations":["Only synthetic Stream WatDiv query templates (not organic logged frequencies)",
           "Train/test halves of a tiny template sample: NOT an independent large-scale confirmation",
-          "Unbound heavy predicate routed conservatively to all 4 shards",
+          "Every fragmented predicate conservatively routed to all shards storing its fragments",
           "RDF physical transfer measured as verified TCP loopback payload only",
           "All stream triples collected into physical payload at once for feasibility only, not chronological execution",
           "No SPARQL join execution, real server routing, queuing, capacity provision, CPU accounting",
