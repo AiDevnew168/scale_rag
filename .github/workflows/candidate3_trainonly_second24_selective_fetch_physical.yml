@@ -1,0 +1,40 @@
+name: Candidate3 second frozen 24 original SWDF TRAIN texts TCP physical replication
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_trainonly_second24_selective_fetch_physical.yml'
+      - 'research/bridge_partition/candidate3_trainonly_second24_selective_fetch_physical.py'
+  workflow_dispatch:
+jobs:
+  second-24-original-query-texts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install exact pinned source and RDF engine dependencies
+        run: pip install pyoxigraph==0.5.13 rdflib==7.5.0 gdown==5.2.0 remotezip==0.12.3
+      - name: Guard second cohort selection against selecting the first 24
+        run: |
+          python -m py_compile research/bridge_partition/candidate3_trainonly_second24_selective_fetch_physical.py
+          python -m unittest research/bridge_partition/test_candidate3_selective_fetch_transport.py research/bridge_partition/test_candidate3_selective_http_semantic_fixture.py -v
+          python - <<'PY'
+          from pathlib import Path
+          s=Path("research/bridge_partition/candidate3_trainonly_second24_selective_fetch_physical.py").read_text()
+          assert 'ordered[N_QUERY_TEXTS:2*N_QUERY_TEXTS]' in s
+          assert '"frozen_rank_start_1based":N_QUERY_TEXTS+1' in s
+          assert '"first_24_latency_seen_before_this_second_lock":True' in s
+          print("SECOND_COHORT_RANKS_LOCKED_25_TO_48")
+          PY
+      - name: Original 24 never-timed training query texts full vs selective TCP physical study
+        run: python -u research/bridge_partition/candidate3_trainonly_second24_selective_fetch_physical.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-second24-trainonly-full-vs-constant-TCP
+          path: |
+            results_candidate3_trainonly_second24_original_SWDF_selective_fetch_physical/report.json
+            results_candidate3_trainonly_second24_original_SWDF_selective_fetch_physical/selection_frozen_before_training_answers.json
+          if-no-files-found: warn
