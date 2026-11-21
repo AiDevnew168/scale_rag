@@ -1,0 +1,32 @@
+name: Candidate 3 exact anchored two-swap compensation frontier
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_two_swap_compensation_oracle.yml'
+      - 'research/bridge_partition/candidate3_two_swap_compensation_oracle.py'
+  workflow_dispatch:
+jobs:
+  anchored-compensation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        month: [january, february, march]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install locked source dependencies
+        run: pip install numpy==2.1.3 pymetis==2025.2.2 mtkahypar==1.7.1 scikit-learn==1.6.1
+      - name: Exhaustively test compensated second swap with future used only by oracle scoring
+        env:
+          COMP_MONTH: ${{ matrix.month }}
+        run: python -u research/bridge_partition/candidate3_two_swap_compensation_oracle.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-second-swap-${{ matrix.month }}
+          path: results_candidate3_compensated_${{ matrix.month }}/report.json
+          if-no-files-found: error
