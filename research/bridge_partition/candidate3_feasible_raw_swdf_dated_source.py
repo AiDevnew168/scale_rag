@@ -14,8 +14,8 @@ ROOT.mkdir(exist_ok=True)
 SOURCE_ID="0B1tUDhWNTjO-T3BweE9YeE1rUGM"
 URL="https://drive.google.com/file/d/"+SOURCE_ID+"/view"
 MAX_ZIP=160_000_000
-MAX_RAW=800_000_000
-MAX_LINES=6_000_000
+MAX_RAW=5_000_000_000
+MAX_LINES=25_000_000
 APACHE=re.compile(r'\[([^]]+)\]\s+"(GET|POST)\s+(.+?)\s+HTTP/[0-9.]+',re.I)
 DTS=("%d/%b/%Y:%H:%M:%S %z","%d/%b/%Y:%H:%M:%S")
 def sha_file(path):
@@ -39,7 +39,7 @@ def audit(path):
         for raw in reader:
             total+=1;rawbytes+=len(raw)
             if total>MAX_LINES or rawbytes>MAX_RAW:
-                raise RuntimeError("SOURCE_LIMIT_REACHED: stop source audit, no partial success")
+                raise RuntimeError(f"SOURCE_LIMIT_REACHED: lines={total} raw_bytes={rawbytes}; no partial success")
             line=raw.decode("utf-8",errors="replace")
             m=APACHE.search(line)
             if not m:
@@ -110,8 +110,8 @@ def main():
         with target.open("rb") as f:
             assert f.read(2)==b"\x1f\x8b","Original artifact not gzip"
         report.update({"source_zip_sha256":sha_file(target),
-          "source_compressed_bytes":size,
-          "eligibility":audit(target)})
+          "source_compressed_bytes":size})
+        report["eligibility"]=audit(target)
         e=report["eligibility"]
         if e["n_full_calendar_UTC_days"]<14:
             report["status"]="BLOCKED_INSUFFICIENT_TRUE_CALENDAR_DAYS"
