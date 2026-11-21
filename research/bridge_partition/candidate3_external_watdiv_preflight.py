@@ -40,12 +40,12 @@ def catalogue(archive,type_name):
             item={"name":m.name,"uncompressed_bytes":m.size}
             files.append(item)
             if type_name=="queries":
-                if m.size>2*1024*1024:continue
+                if m.size>6*1024*1024:continue
                 data=tar.extractfile(m).read()
                 text=data.decode("utf8",errors="replace")
                 if any(w in text for w in ("SELECT","PREFIX","WHERE")):
                     sample[m.name]={"sha256":hashlib.sha256(data).hexdigest(),
-                        "select_occurrences":len(re.findall(r"\\bSELECT\\b",text,re.I)),
+                        "select_occurrences":text.upper().count("SELECT"),
                         "preview_first_1000_chars":text[:1000]}
             else:
                 if len(sample)>=3:continue
