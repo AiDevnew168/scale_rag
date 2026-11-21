@@ -4,6 +4,7 @@ on:
     paths:
       - '.github/workflows/candidate3_swdf_176day_physical_economic.yml'
       - 'research/bridge_partition/candidate3_swdf_176day_physical_economic.py'
+      - 'research/bridge_partition/test_candidate3_swdf_176day_physical_preflight.py'
   workflow_dispatch:
 jobs:
   strict-original-four-shard-physical-net:
@@ -18,6 +19,8 @@ jobs:
         run: |
           python -m py_compile research/bridge_partition/candidate3_swdf_176day_physical_economic.py
           pip install pyoxigraph==0.5.13 rdflib==7.5.0 gdown==5.2.0 remotezip==0.12.3
+      - name: Regression test source-only SELECT eligibility and physical sampler parity
+        run: python -m unittest research/bridge_partition/test_candidate3_swdf_176day_physical_preflight.py -v
       - name: Execute date-frozen original full SELECT with four physical indexed TCP shard processes and controls
         run: python -u research/bridge_partition/candidate3_swdf_176day_physical_economic.py
       - uses: actions/upload-artifact@v4

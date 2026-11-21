@@ -43,6 +43,7 @@ MAX_BYTES=25_000_000
 MAX_QUERY_MS=80_000
 MAX_OUTPUT_BYTES=5_000_000
 TEST_ERRORS_TO_KEEP=15
+SELECT_TOKEN=re.compile(r"\bSELECT\b",re.I)  # Match audited source-only SELECT token semantics.
 
 def load_real_source():
     gp=graphsource.downloaded()
@@ -105,7 +106,7 @@ def get_dated_sample(sourcepath,predicates):
             if day is None:continue
             q=raw.parse_query(m.group(3))
             if q is None:continue
-            if not re.search(r"\\bSELECT\\b",q,re.I):continue
+            if not SELECT_TOKEN.search(q):continue
             original_selects+=1
             h=hashlib.sha256(q.encode()).hexdigest()
             if h not in parse_cache:
@@ -264,12 +265,9 @@ def main():
     assert raw.sha_file(rawpath)==SOURCE_SHA
     requested,daycounts,source_audit=get_dated_sample(rawpath,
        {p[1:-1] for p in weights})
-    assert source_audit["observed_exact_eligible_occurrences_by_split"]=={
-        "train":4707,"construction":None,"calibration":None,"test":1441} or (
-        source_audit["observed_exact_eligible_occurrences_by_split"]["train"]==4707
-        and source_audit["observed_exact_eligible_occurrences_by_split"]["test"]==1441
-        and source_audit["observed_exact_eligible_occurrences_by_split"]["construction"]+
-           source_audit["observed_exact_eligible_occurrences_by_split"]["calibration"]==994)
+    split_counts=source_audit["observed_exact_eligible_occurrences_by_split"]
+    assert (split_counts["train"]==4707 and split_counts["test"]==1441 and
+            split_counts["construction"]+split_counts["calibration"]==994), split_counts
     actions,construction_meta=planner.choose_plans(requested["train"],
         requested["construction"],route,loads,weights,cap)
     assert set(actions)==set(ACTIONS)
@@ -294,7 +292,7 @@ def main():
     print("ORIGINAL_2014_SWDF_ACTIONS_FROZEN_BEFORE_TEST",decision_hash,flush=True)
     del rawpath
     central=Store()
-    central.bulk_load(input=graph,format=RdfFormat.N_TRIPLES)
+    central.load(input=graph,format=RdfFormat.N_TRIPLES)  # Preserve cross-predicate blank-node joins
     del graph
     fragmented={p for p,locations in route.items() if len(locations)>1}
     original_ports,original_workers=worker.start_group(packs)
