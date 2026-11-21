@@ -22,7 +22,7 @@ jobs:
           java-version: '8'
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.11'
       - name: Compile unmodified author algorithm with original Maven dependency metadata
         working-directory: diaeresis-pinned
         run: mvn -B -DskipTests package
