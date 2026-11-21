@@ -4,6 +4,7 @@ on:
     paths:
       - '.github/workflows/candidate3_independent_semantic_crosscheck.yml'
       - 'research/bridge_partition/candidate3_independent_semantic_crosscheck.py'
+      - 'research/bridge_partition/candidate3_sparql_semantic_oracle.py'
   workflow_dispatch:
 jobs:
   independently-certify:
