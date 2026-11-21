@@ -8,7 +8,7 @@ on:
 jobs:
   original-full-raw-access-log-eligibility:
     runs-on: ubuntu-latest
-    timeout-minutes: 18
+    timeout-minutes: 32
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
