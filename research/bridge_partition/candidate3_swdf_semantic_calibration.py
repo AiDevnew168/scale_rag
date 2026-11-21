@@ -80,7 +80,9 @@ def main():
                 "statuses":dict(statuses),
                 "reason_counts":[{"kind":k[0],"reason":k[1],"n":v}
                     for k,v in reasons.most_common()],
-                "outcomes":audit,\n                "nonpassing_hash_and_reason":[{"sha":z["sha"],**z["outcome"]} for z in audit\n                                  if z["outcome"]["status"]!="PASS"]}
+                "outcomes":audit,
+                "nonpassing_hash_and_reason":[{"sha":z["sha"],**z["outcome"]} for z in audit
+                                  if z["outcome"]["status"]!="PASS"]}
             print("SEMANTIC_CALIBRATION_ACTION",method,dict(statuses),flush=True)
         finally:workers.stop_group(processes)
     report={"schema":"candidate3-SWDF-calibration-SPARQL-semantic-certifier-v1",
