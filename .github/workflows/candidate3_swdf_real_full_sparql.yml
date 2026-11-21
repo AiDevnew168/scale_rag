@@ -25,4 +25,5 @@ jobs:
           path: |
             results_candidate3_swdf_real_federated/report.json
             results_candidate3_swdf_real_federated/frozen_actions.json
+            results_candidate3_swdf_real_federated/source_utf8_transcode_audit.json
           if-no-files-found: warn
