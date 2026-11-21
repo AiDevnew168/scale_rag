@@ -1,0 +1,26 @@
+name: Candidate 3 four real Oxigraph SPARQL shard processes
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_real_sparql_shards.yml'
+      - 'research/bridge_partition/candidate3_real_sparql_shards.py'
+  workflow_dispatch:
+jobs:
+  distributed-sparql-correctness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install fixed SPARQL 1.1 engine
+        run: pip install pyoxigraph==0.5.13
+      - name: Execute four live RDF workers, original SPARQL, correctness and real movement
+        run: python -u research/bridge_partition/candidate3_real_sparql_shards.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-real-sparql-4shard
+          path: results_candidate3_real_spql_shards/report.json
+          if-no-files-found: warn
