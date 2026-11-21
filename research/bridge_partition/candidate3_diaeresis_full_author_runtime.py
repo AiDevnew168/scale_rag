@@ -73,6 +73,18 @@ def main():
             assert all(".." not in name for name in z.namelist())
             z.extractall(BASE)
         assert DATA.exists() and SCHEMA.exists(),(DATA,SCHEMA)
+        # Audit-preserving common input: 27 original source lines carry
+        # U+FFFD inside RDF IRIs, which strict Oxigraph refuses but Spark
+        # tolerated. Both author Spark and Oxigraph MUST read the SAME
+        # complete, normalized 304583-line graph; never silently drop rows.
+        from candidate3_diaeresis_strict_rdf_normalization import certify
+        original_raw=DATA.read_bytes()
+        normalized,normalized_audit=certify(original_raw)
+        DATA.write_bytes(normalized)
+        d["explicit_shared_graph_normalization"]=normalized_audit
+        d["source_original_author_bytes_not_byte_identical_after_normalization"]=True
+        print("AUTHOR_AND_OXIGRAPH_SAME_NORMALIZED_RDF",
+            normalized_audit["normalized_sha256"],flush=True)
         HDFS.mkdir(exist_ok=True,parents=True)
         QDIR.mkdir(exist_ok=True,parents=True)
         author_queries=Path("diaeresis-pinned/queries/swdf/swdf(u)")
