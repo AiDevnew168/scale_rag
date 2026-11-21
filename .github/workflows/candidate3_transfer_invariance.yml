@@ -1,0 +1,21 @@
+name: Candidate 3 physical predicate-response-byte invariance and evidence gate
+on:
+  push:
+    paths:
+      - 'research/bridge_partition/candidate3_transfer_invariance.py'
+      - 'research/bridge_partition/test_candidate3_transfer_invariance.py'
+      - '.github/workflows/candidate3_transfer_invariance.yml'
+  workflow_dispatch:
+jobs:
+  actual-router-transport-invariant:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install exact existing routing module dependencies
+        run: pip install pyoxigraph==0.5.13 rdflib==7.5.0 gdown==5.2.0 remotezip==0.12.3
+      - name: Test source coverage, actual router, and false-positive economic veto
+        run: python -m unittest research/bridge_partition/test_candidate3_transfer_invariance.py -v
