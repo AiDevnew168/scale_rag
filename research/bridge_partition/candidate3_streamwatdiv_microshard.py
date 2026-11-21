@@ -65,7 +65,7 @@ def gate(queries,part,heavy):
 
 def optimize(train,part,siz,heavy,balances,cap,criterion):
     start=gate(train,part,heavy)["extra_shard_touches"]
-    best=(0,None,None)
+    best_rank=None;best_pair=None;best_info=None
     valid=0
     for p,q in itertools.combinations(sorted(part),2):
         a,b=part[p],part[q]
@@ -82,9 +82,9 @@ def optimize(train,part,siz,heavy,balances,cap,criterion):
         elif criterion=="gain_per_byte":
             rank=(gain/max(cost,1),gain,-cost)
         else:raise ValueError(criterion)
-        if gain>0 and rank>best[0]:
-            best=(rank,(p,q),{"gain_train":gain,"moved_raw_bytes":cost})
-    return best[1],best[2],valid
+        if gain>0 and (best_rank is None or rank>best_rank):
+            best_rank=rank;best_pair=(p,q);best_info={"gain_train":gain,"moved_raw_bytes":cost}
+    return best_pair,best_info,valid
 
 def migrate_payload(pair,pred):
     if not pair:return {"migrated":False,"moved_raw_bytes":0}
