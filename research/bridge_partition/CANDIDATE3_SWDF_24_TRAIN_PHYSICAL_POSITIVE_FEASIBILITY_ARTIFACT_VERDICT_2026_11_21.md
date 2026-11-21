@@ -19,10 +19,12 @@
 | Mean end-to-end wall time (ms) | 155.0821 | 93.6312 |
 | Median end-to-end wall time (ms) | 162.9948 | 89.0957 |
 | Empirical p95 wall time (ms) | 173.4361 | 116.4580 |
+| Empirical p99 (nearest-rank, n=48) wall time (ms) | 174.5101 | **326.7436** |
 | Total RDF response payload (decimal MB) | 565.956588 | 236.504624 |
 
 - Median per-query RDF byte fraction reduced **58.341%** (reported 0.58341). Aggregate payload-body byte reduction **58.212%**. Positive RDF byte saving occurred in all 48 measurements; the request selects source-original N-Triples lines retaining blank-node identity.
 - Mean paired end-to-end saving **+61.45091 ms per original training query**, median paired saving +70.5533 ms; **47/48 individual pairs** were positive. Per-unique-text mean was positive for **23/24** distinct texts.
+- **Critical tail-SLA warning:** the worst selective execution was 326.7436ms versus the worst full execution at 174.5101ms; with n=48, nearest-rank empirical p99 equals the maximum and is **87.2% worse** under selective filtering. This is ONE cold-looking event, not a statistically reliable 99th-percentile population estimate. Passing the preregistered sample p95 gate does not certify p99, worst-case tail or a bounded-loss production policy. Any SLA-sensitive deployment needs cold/warm-stratified tail risk and cache budget controls.
 - First chosen query repetition 0 incurred a **-222.8261 ms** timing loss (103.9175 ms full vs 326.7436 ms selective), even though it reduced RDF bytes 6,915,894 to 1,439,588. The first trial may include lazy worker cache/index initialization; this causal explanation is **hypothetical, not yet physically separated**.
 - Repetition 0: across 24 distinct texts mean +55.64285 ms, 23/24 positive; repetition 1: mean +67.25896 ms, 24/24 positive. Worker startup/index memory and cold/warm amortization costs have not been separately metered.
 - Exploratory query-cluster bootstrap over the 24 distinct text-means (10,000 resamples, seed 20261121) gave **[46.32,72.26] ms** 2.5–97.5% quantiles. This is a *sample-conditional sensitivity interval*, NOT a prospective temporal 95% confidence interval, and not independent of source/query-family clusters.
