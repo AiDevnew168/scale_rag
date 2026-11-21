@@ -1,0 +1,26 @@
+name: Candidate 3 independent W3C semantic cross-check on four real SWDF stores
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_independent_semantic_crosscheck.yml'
+      - 'research/bridge_partition/candidate3_independent_semantic_crosscheck.py'
+  workflow_dispatch:
+jobs:
+  independently-certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install exact full RDF SPARQL libraries
+        run: pip install rdflib==7.5.0 pyoxigraph==0.5.13 gdown==5.2.0
+      - name: Independently certify original unmodified 84 calibration SPARQL queries before and after physical swap
+        run: python -u research/bridge_partition/candidate3_independent_semantic_crosscheck.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-independent-two-certifier-source-semantic-SWDF
+          path: results_candidate3_independent_semantic_crosscheck/report.json
+          if-no-files-found: error
