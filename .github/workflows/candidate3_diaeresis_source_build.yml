@@ -1,0 +1,35 @@
+name: Candidate 3 faithful published DIAERESIS source reproducibility audit
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_diaeresis_source_build.yml'
+  workflow_dispatch:
+jobs:
+  upstream-faithfulness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: isl/DIAERESIS
+          ref: 22dfe190078973f644f5d6279181e54ec116f6e3
+          path: diaeresis-pinned
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - name: Compile real author implementation pinned, not a heuristic impostor
+        working-directory: diaeresis-pinned
+        run: |
+          set -o pipefail
+          java -version
+          mvn -B -DskipTests package | tee /tmp/diaeresis_mvn_build.log
+      - name: Inspect published installation's actual runtime dependencies
+        if: always()
+        run: |
+          printf 'source_sha=22dfe190078973f644f5d6279181e54ec116f6e3\n'
+          printf 'requires_Spark_2_2_or_newer_and_Hadoop_2_7_plus=true\n'
+          printf 'has_hdfs=$(command -v hdfs || true)\n'
+          printf 'has_spark_submit=$(command -v spark-submit || true)\n'
+          printf 'built_artifacts:\n'
+          find diaeresis-pinned/target -maxdepth 1 -name '*.jar' -printf '%f %s bytes\n' || true
