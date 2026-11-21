@@ -1,0 +1,29 @@
+name: Candidate 3 post-result TRAIN24 original RDF parsed filter-index setup resource audit
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_trainonly_filter_index_build_profile.yml'
+      - 'research/bridge_partition/candidate3_trainonly_filter_index_build_profile.py'
+      - 'research/bridge_partition/test_candidate3_trainonly_filter_index_build_profile.py'
+  workflow_dispatch:
+jobs:
+  source_original_24_query_shard_fragment_setup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Pin exact source RDF, engine and query parse versions
+        run: pip install pyoxigraph==0.5.13 rdflib==7.5.0 gdown==5.2.0 remotezip==0.12.3
+      - name: Validate original source fragment and profile invariant tests
+        run: python -m unittest research/bridge_partition/test_candidate3_trainonly_filter_index_build_profile.py -v
+      - name: Measure cold parsed original shard-fragment setup for SHA-frozen training queries
+        run: python -u research/bridge_partition/candidate3_trainonly_filter_index_build_profile.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-postresult-SWDF-TRAIN24-cold-original-index-build
+          path: results_candidate3_trainonly_filter_index_build_cost/report.json
+          if-no-files-found: warn
