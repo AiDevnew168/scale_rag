@@ -1,0 +1,19 @@
+name: Candidate 3 formally conditional economic admission adversarial tests
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_bounded_drift_economic_certificate.yml'
+      - 'research/bridge_partition/candidate3_bounded_drift_economic_certificate.py'
+      - 'research/bridge_partition/test_candidate3_bounded_drift_economic_certificate.py'
+  workflow_dispatch:
+jobs:
+  mathematical-fail-closed-control:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: No-dependency adversarial bound, assumptions, and return-to-no-move tests
+        run: python research/bridge_partition/test_candidate3_bounded_drift_economic_certificate.py
