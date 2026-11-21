@@ -1,0 +1,23 @@
+name: Candidate 3 independent RDF microshard physical feasibility
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_streamwatdiv_microshard.yml'
+  workflow_dispatch:
+jobs:
+  microshard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run byte-capacity and TCP-migration heldout small RDF pilot
+        run: python research/bridge_partition/candidate3_streamwatdiv_microshard.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-streamwatdiv-microshard
+          path: results_candidate3_streamwatdiv_microshard/
+          if-no-files-found: error
