@@ -1,0 +1,34 @@
+name: Candidate 3 frozen WatDiv true-byte economic admission envelope
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_byte_economic_envelope.yml'
+      - 'research/bridge_partition/candidate3_byte_economic_envelope.py'
+  workflow_dispatch:
+permissions:
+  actions: read
+  contents: read
+jobs:
+  conditional-net-benefit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Consume frozen exact-disjoint WatDiv10M fivefold evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: candidate3-WatDiv10M-pattern-disjoint-folds
+          run-id: 44869561656
+          github-token: ${{ github.token }}
+          path: bundle
+      - name: Conditional cost, static and always-migrate comparisons
+        run: python -u research/bridge_partition/candidate3_byte_economic_envelope.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-observed-only-economic-admission-envelope
+          path: results_candidate3_byte_economics_envelope/report.json
+          if-no-files-found: error
