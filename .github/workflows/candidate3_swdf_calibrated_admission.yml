@@ -1,0 +1,29 @@
+name: Candidate 3 SWDF measured calibration-only economic admission
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_swdf_calibrated_admission.yml'
+      - 'research/bridge_partition/candidate3_swdf_calibrated_admission.py'
+  workflow_dispatch:
+jobs:
+  calibration-then-heldout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Exact full SPARQL engine and source parser
+        run: pip install pyoxigraph==0.5.13 rdflib==7.5.0 gdown==5.2.0
+      - name: Calibrate full physical move net benefit then freeze action before all 102 heldout answers
+        run: python -u research/bridge_partition/candidate3_swdf_calibrated_admission.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-SWDF-measured-calibrated-admission
+          path: |
+            results_candidate3_SWDF_measured_admission/decision_frozen_before_test.json
+            results_candidate3_SWDF_measured_admission/report.json
+            results_candidate3_swdf_real_federated/source_utf8_transcode_audit.json
+          if-no-files-found: warn
