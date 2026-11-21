@@ -25,7 +25,7 @@ ROW_KIND=URIRef("urn:c3:select-result-row-kind")
 ROW_TYPE=URIRef("urn:c3:row")
 BINDING="urn:c3:binding:"
 MAX_BLANK_FULL_ROWS=2000
-MAX_BLANK_LIMIT_ROWS=40
+MAX_BLANK_LIMIT_ROWS=2500
 MAX_BLANK_REFERENCE_ROWS=2500
 MAX_SEARCH_STATES=200000
 
@@ -115,7 +115,7 @@ def _limited_blank_subset(candidate,reference):
     # This permits large 30k-reference result sets when LIMIT is small,
     # without pretending blank labels are globally comparable.
     if len(candidate)>MAX_BLANK_LIMIT_ROWS or len(reference)>30000:
-        raise Inconclusive("blank_node_limit_subset_exceeds_exact_search_cap")
+        raise Inconclusive("blank_node_limit_subset_exceeds_exact_search_cap:"+str(len(candidate))+":"+str(len(reference)))
     def signature(row):
         return tuple(("bnode",) if t is not None and t[0]=="bnode" else t
                      for t in row)
