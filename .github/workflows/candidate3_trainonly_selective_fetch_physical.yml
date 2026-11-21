@@ -1,0 +1,35 @@
+name: Candidate 3 TRAIN-only original SPARQL constant-filtered TCP physical feasibility
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_trainonly_selective_fetch_physical.yml'
+      - 'research/bridge_partition/candidate3_trainonly_selective_fetch_physical.py'
+      - 'research/bridge_partition/candidate3_selective_fetch_transport.py'
+      - 'research/bridge_partition/candidate3_source_identity_worker.py'
+      - 'research/bridge_partition/test_candidate3_selective_fetch_transport.py'
+  workflow_dispatch:
+jobs:
+  original-24-training-queries-physical-comparison:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned RDF engine, algebra parser and original source dependencies
+        run: pip install pyoxigraph==0.5.13 rdflib==7.5.0 gdown==5.2.0 remotezip==0.12.3
+      - name: Compile and verify 7 independent source identity and SPARQL regression tests
+        run: |
+          python -m py_compile research/bridge_partition/candidate3_trainonly_selective_fetch_physical.py
+          python -m unittest research/bridge_partition/test_candidate3_selective_fetch_transport.py -v
+      - name: Full original 2014 train source graph, bounded 24 query TCP physical selective-fetch comparison
+        run: python -u research/bridge_partition/candidate3_trainonly_selective_fetch_physical.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-trainonly-24query-physical-selective-fetch
+          path: |
+            results_candidate3_trainonly_original_SWDF_selective_fetch_physical/report.json
+            results_candidate3_trainonly_original_SWDF_selective_fetch_physical/selection_frozen_before_training_answers.json
+          if-no-files-found: warn
