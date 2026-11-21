@@ -1,0 +1,26 @@
+name: Candidate 3 genuinely unseen real NYT full four-shard SPARQL physical acceptance
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_nyt_full_real_e2e.yml'
+      - 'research/bridge_partition/candidate3_nyt_full_real_e2e.py'
+  workflow_dispatch:
+jobs:
+  no-test-tuning-new-real-RDF:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned true RDF/SPARQL engines and range ZIP reader
+        run: pip install pyoxigraph==0.5.13 rdflib==7.5.0 remotezip==0.12.3 gdown==5.2.0
+      - name: Four independent physical indexed RDF workers and frozen heldout source-family acceptance
+        run: python -u research/bridge_partition/candidate3_nyt_full_real_e2e.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-brand-new-real-NYT-four-process-SPARQL
+          path: results_candidate3_nyt_full_real_SPARQL/
+          if-no-files-found: error
