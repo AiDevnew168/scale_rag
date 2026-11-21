@@ -1,0 +1,28 @@
+name: Candidate 3 frozen SWDF full-query failure classifier
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_swdf_failure_audit.yml'
+      - 'research/bridge_partition/candidate3_swdf_failure_audit.py'
+  workflow_dispatch:
+permissions:
+  actions: read
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Read only frozen original real SWDF full-SPARQL execution artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: candidate3-SWDF-real-four-shard-full-query-economics
+          run-id: 44874462942
+          github-token: ${{ github.token }}
+          path: bundle
+      - name: Classify failures without modifying independent scores
+        run: python research/bridge_partition/candidate3_swdf_failure_audit.py
