@@ -1,0 +1,26 @@
+name: Candidate 3 semantic SPARQL acceptance on four real indexed RDF shards
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_semantic_swdf_calibration.yml'
+      - 'research/bridge_partition/candidate3_swdf_semantic_calibration.py'
+  workflow_dispatch:
+jobs:
+  real-physical-calibration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned original SPARQL engine and graph
+        run: pip install pyoxigraph==0.5.13 rdflib==7.5.0 gdown==5.2.0
+      - name: Run unchanged original SELECT against original and sharded SWDF
+        run: python -u research/bridge_partition/candidate3_swdf_semantic_calibration.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-SWDF-semantic-calibration
+          path: results_candidate3_swdf_semantic_calibration/report.json
+          if-no-files-found: error
