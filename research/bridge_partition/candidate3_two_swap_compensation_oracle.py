@@ -91,7 +91,9 @@ def candidate_metrics(part,obs,fu,known,reference):
     def best(records,objective):
         if not records:return None
         return max(records,key=lambda z:(
-          z[objective],z["day0_local_gain"],-z["second_swap"][0],-z["second_swap"][1]))
+          z[objective],z["day0_local_gain"],
+                    -z["second_swap"][0] if z["second_swap"] is not None else -99999,
+                    -z["second_swap"][1] if z["second_swap"] is not None else -99999))
     def brief(x):return x
     first_row={"second_swap":None,**first}
     all_records=choices+[first_row]
