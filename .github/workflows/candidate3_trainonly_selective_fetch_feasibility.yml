@@ -1,0 +1,29 @@
+name: Candidate 3 train-only organic SPARQL selective-fetch feasibility
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_trainonly_selective_fetch_feasibility.yml'
+      - 'research/bridge_partition/candidate3_trainonly_selective_fetch_feasibility.py'
+      - 'research/bridge_partition/test_candidate3_trainonly_selective_fetch_feasibility.py'
+  workflow_dispatch:
+jobs:
+  precommitted-train-only-structural-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned existing source analysis dependencies
+        run: pip install pyoxigraph==0.5.13 rdflib==7.5.0 gdown==5.2.0 remotezip==0.12.3
+      - name: Synthetic query-shape regressions
+        run: python -m unittest research/bridge_partition/test_candidate3_trainonly_selective_fetch_feasibility.py -v
+      - name: Source-only aggregate TRAIN eligibility, no calibration/test queries
+        run: python -u research/bridge_partition/candidate3_trainonly_selective_fetch_feasibility.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-trainonly-selective-fetch-source-shapes
+          path: results_candidate3_swdf_trainonly_selective_fetch_feasibility/report.json
+          if-no-files-found: warn
