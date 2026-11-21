@@ -50,7 +50,7 @@ jobs:
           PY
 
       - name: Install exact Oxigraph for same-source same-query semantic interoperability
-        run: pip install pyoxigraph==0.5.13
+        run: pip install pyoxigraph==0.5.13 gdown==5.2.0
       - name: Compare original author Spark SQL result counts against full RDF Oxigraph and four physical shard stores
         run: python -u research/bridge_partition/candidate3_diaeresis_same_source_oxigraph_check.py
       - uses: actions/upload-artifact@v4
