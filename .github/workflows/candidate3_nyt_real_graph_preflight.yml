@@ -1,0 +1,26 @@
+name: Candidate 3 untouched real NYT complete RDF precommitted source gate
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_nyt_real_graph_preflight.yml'
+      - 'research/bridge_partition/candidate3_nyt_real_graph_preflight.py'
+  workflow_dispatch:
+jobs:
+  no-performance-peeking:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install bounded remote ZIP reader
+        run: pip install remotezip==0.12.3
+      - name: Read FULL external original real NYT RDF with reproducible hash and untouched query-family inventory
+        run: python -u research/bridge_partition/candidate3_nyt_real_graph_preflight.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-new-NYT-real-RDF-family-source-preflight
+          path: results_candidate3_NYT_real_graph_source/report.json
+          if-no-files-found: error
