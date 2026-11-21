@@ -48,3 +48,14 @@ jobs:
           assert d['full_original_three_stage_execution'], d.get('blocker', d['gate'])
           print('ORIGINAL_AUTHOR_FULL_DAP_TRANSLATE_EXECUTE_PASS')
           PY
+
+      - name: Install exact Oxigraph for same-source same-query semantic interoperability
+        run: pip install pyoxigraph==0.5.13
+      - name: Compare original author Spark SQL result counts against full RDF Oxigraph and four physical shard stores
+        run: python -u research/bridge_partition/candidate3_diaeresis_same_source_oxigraph_check.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-DIAERESIS-author-vs-Oxigraph-same-source-three-query
+          path: results_candidate3_diaeresis_same_source_comparison/report.json
+          if-no-files-found: warn
