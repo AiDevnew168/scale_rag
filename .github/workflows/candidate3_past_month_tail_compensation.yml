@@ -1,0 +1,32 @@
+name: Candidate 3 causal previous-month tail-compensated 2-swap
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_past_month_tail_compensation.yml'
+      - 'research/bridge_partition/candidate3_past_month_tail_compensation.py'
+  workflow_dispatch:
+jobs:
+  causal-previous-tail:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        month: [january, february, march]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned requirements
+        run: pip install numpy==2.1.3 pymetis==2025.2.2 mtkahypar==1.7.1 scikit-learn==1.6.1
+      - name: Make second-swap policy from strictly earlier month and current day0
+        env:
+          PTCR_MONTH: ${{ matrix.month }}
+        run: python -u research/bridge_partition/candidate3_past_month_tail_compensation.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-pastmonth-tail-${{ matrix.month }}
+          path: results_candidate3_PTCR_${{ matrix.month }}/report.json
+          if-no-files-found: error
