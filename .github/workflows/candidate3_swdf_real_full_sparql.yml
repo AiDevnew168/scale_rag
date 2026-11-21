@@ -1,0 +1,28 @@
+name: Candidate 3 new real SWDF complete SPARQL four-shard economic acceptance
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_swdf_real_full_sparql.yml'
+      - 'research/bridge_partition/candidate3_swdf_real_full_sparql_economics.py'
+  workflow_dispatch:
+jobs:
+  true-four-process-query-and-index-cost:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install exactly pinned RDF engines and graph source tooling
+        run: pip install pyoxigraph==0.5.13 rdflib==7.5.0 gdown==5.2.0
+      - name: Frozen real-log family-disjoint SPARQL execution and physical same-byte-budget migration
+        run: python -u research/bridge_partition/candidate3_swdf_real_full_sparql_economics.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-SWDF-real-four-shard-full-query-economics
+          path: |
+            results_candidate3_swdf_real_federated/report.json
+            results_candidate3_swdf_real_federated/frozen_actions.json
+          if-no-files-found: warn
