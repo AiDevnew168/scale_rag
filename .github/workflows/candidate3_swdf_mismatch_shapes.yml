@@ -1,0 +1,28 @@
+name: Candidate 3 frozen full-SPARQL mismatch structural cause audit
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_swdf_mismatch_shapes.yml'
+      - 'research/bridge_partition/candidate3_swdf_mismatch_shapes.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  frozen-query-structure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install rdflib==7.5.0 gdown==5.2.0
+      - uses: actions/download-artifact@v4
+        with:
+          name: candidate3-SWDF-real-four-shard-full-query-economics
+          run-id: 44874462942
+          github-token: ${{ github.token }}
+          path: bundle
+      - name: Classify unchanged failed original SPARQL queries by LIMIT and ORDER BY
+        run: python -u research/bridge_partition/candidate3_swdf_mismatch_shapes.py
