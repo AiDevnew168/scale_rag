@@ -1,0 +1,26 @@
+name: Candidate 3 original LargeRDFBench federated SPARQL eligibility audit
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_largeRDF_query_structure.yml'
+      - 'research/bridge_partition/candidate3_largeRDF_query_structure.py'
+  workflow_dispatch:
+jobs:
+  strict-sparql-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned original SPARQL algebra parser
+        run: pip install rdflib==7.5.0
+      - name: Structural contract only - no RDF graph or answer leak
+        run: python -u research/bridge_partition/candidate3_largeRDF_query_structure.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-new-LargeRDFBench-SPARQL-query-contract
+          path: results_candidate3_external_largeRDF_query_contract/report.json
+          if-no-files-found: error
