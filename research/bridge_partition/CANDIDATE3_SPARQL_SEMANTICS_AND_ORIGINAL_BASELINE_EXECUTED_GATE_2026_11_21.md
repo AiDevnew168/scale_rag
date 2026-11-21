@@ -53,7 +53,7 @@ The **original published Scala source is not modified**; both Spark DAP and Oxig
 
 Our comparison script `candidate3_diaeresis_same_source_oxigraph_check.py` is scoped to full original SELECT on author source; DIAERESIS author emits **row counts**, so equality can only be established for counts, not its entire solution binding multiset. It is an engineering interoperability check, not full paper-level equivalent benchmark.
 
-Prior original author comparison failed twice on mundane startup issues (missing gdown then strict N-Triples-invalid RDF), retained as failures. Pre-normalized full published pipeline itself passed. The normalized same-source run is required to establish any actual same-source overlap; do not cite source-normalization preflight as author baseline success.
+Prior original author comparison failed twice on mundane startup issues (missing gdown then strict N-Triples-invalid RDF), retained as failures. Pre-normalized full published pipeline itself passed. The normalized same-source full three-stage published pipeline and Oxigraph counter-evaluation **completed** successfully; see the completed result in Section E. Count non-equivalence remains an explicit fail.
 
 ## D. Prior-art inspection and scientific GO
 
@@ -65,9 +65,45 @@ Original AdPart author source https://github.com/razen-alharbi/AdPart exists and
 | Correct RDF source fragment assembly on 4 independent indexed TCP workers | **PASS within audited supported subset** |
 | At least two new real third-party RDF datasets with measured physical movement and correctness | **PASS**, but graph-generated synthetic request families |
 | Pretest admission avoids harmful migration on unseen DrugBank | **PASS conditional to given 1 scenario**; realized economic improvement vs zero-move is zero |
-| Matched published implementation same input, same original queries and source | **BLOCKED until exact full common-graph test completes** |
+| Matched published implementation same normalized input and same 3 unmodified original queries | **EXECUTED**; counts MATCH 2/3, FAIL 1/3 |
 | Fair matched published baseline net economic superiority on statistically powered real chronological user traffic | **NOT ESTABLISHED** |
 | Cross-host full distributed E2E, crash-consistent migration, realistic network and dollars | **NOT ESTABLISHED** |
 | Top-journal novelty and economic superiority | **NO-GO ON CURRENT EVIDENCE** |
 
 Do not use future labels to tune any threshold, rebrand already opened samples as prospective, or claim original DIAERESIS raw RDF is byte-identical after normalization. Any actual future confirmed result must preserve all source identifiers, refusal counts and journal gate blockers.
+
+
+## E. COMPLETED original DIAERESIS unmodified author pipeline vs physical Oxigraph on SAME normalized complete original SWDF data
+
+Source-verified GitHub Actions **SUCCESS**, including the full original DAP partitioner, QueryTranslator, Spark QueryProcessor, original Oxigraph centralized graph, and real 4-process TCP Oxigraph indexed fragment retrieval with unchanged original SELECT:
+https://github.com/AiDevnew168/scale_rag/actions/runs/44900610242
+
+The published author code at SHA `22dfe190078973f644f5d6279181e54ec116f6e3` remained unmodified. The **identical normalized RDF file** (`ea2b8ac2e06bdf6f6d8aa2f64178dfb02fe9fb6a32343e2bde63f133c74bf034`, full **304,583** triples) was given to both Spark and Oxigraph; original unmodified RDF had 28 illegal replacement glyphs in IRI brackets. All 4 Oxigraph shard raw sizes were [12,896,928; 12,896,936; 12,896,945; 12,896,949] bytes under shared cap 14,186,634 bytes/shard.
+
+The EXACT three unchanged author-published original queries were selected only by source structure before any result/time: `query101.txt`, `query118.txt`, and `query35.txt`. These correspond to `query_0.txt`, `query_1.txt`, `query_2.txt` in the original author's runner folder.
+
+| Unmodified author original query | Author original Spark count | Central original Oxigraph count | Physical 4-worker Oxigraph original SELECT semantic legality | Author count matches |
+|---|---:|---:|---|---|
+| `query101.txt` | 1 | 1 | PASS | **YES** |
+| `query118.txt` | **11,112** | **11,114** | PASS | **NO** (two-row deficit) |
+| `query35.txt` | 1,092 | 1,092 | PASS | **YES** |
+
+This is **2/3 count matches**, not all 3. The author emits count, not complete binding rows, so this is the upper limit of verified author-output equivalence. The published baseline's query 118 on the SAME strict normalized graph is not semantically count-equivalent to original SELECT as implemented by central Oxigraph.
+
+Real author-specific original Spark query time fields 142ms, 77ms, and 1742ms (and separate author-specific data-load timings 1019, 109 and 439ms); our TCP coordinator+Oxigraph mean raw fragment load + unchanged SELECT over three repetitions was 21.0595ms, 53.1768ms, 51.7502ms. These are **different execution engines/plans and metrics**, on one hosted VM and only three queries: **NO direct algorithmic speedup or superiority ratio is scientifically valid**. DIAERESIS uses schema+vertical Spark partitions; our method uses predicate-sharded eager fragment gathering. DIAERESIS has not been provided the PTCR migration and does not implement the same action budget.
+
+### Original source-level mismatch audit (never delete source rows)
+
+Independent repeatable audit: https://github.com/AiDevnew168/scale_rag/actions/runs/44900984321
+
+The original author raw N-Triples file has **11,114** explicit `?person rdf:type foaf:Person` assertions with **11,114 distinct lexical subjects**, **zero duplicated subject assertions**; the same normalized file still has 11,114 assertions. Only **one of those 11,114 source lines** was among the 27 IRI normalization-modified lines. Author Spark returned 11,112. The two-row difference is therefore NOT explained by dropping duplicate assertions and cannot be dismissed as legitimate unordered LIMIT variation (the original `query118.txt` has **NO LIMIT**). The cause inside the author schema/SQL translation/partitioner is **not yet isolated**. We do NOT modify or filter source assertions to manufacture 3/3 equivalence.
+
+**Final exact gates:**
+- Physical source-matched published code full pipeline: **PASS for execution**.
+- Source-aligned published-vs-central SELECT row count: **FAIL (2/3 only)**.
+- Physical four-worker original SELECT semantic equality against original centralized source for these three: **PASS (3/3)**.
+- Statistically supported economic SOTA versus published original baseline: **FAIL / BLOCKED**, n=3 and execution/accounting models differ.
+- Independently verified real RDF graph admission: DrugBank pretest conservative no-move **avoids** a real negative counterfactual; not a positive profit or claim of novel theoretical certification.
+- Genuine full real-user dated SPARQL traffic matched to RDF version, real multi-host operational economics, matched WISE/WASP/AdPart: **NOT ACHIEVED**.
+
+**Paper publication superiority statement remains NO-GO**. Achieved reproducible credible full baseline code execution and discovered a concrete original result-count discrepancy instead of declaring a false victory.
