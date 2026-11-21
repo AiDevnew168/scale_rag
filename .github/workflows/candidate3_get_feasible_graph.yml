@@ -1,0 +1,26 @@
+name: Candidate 3 original FEASIBLE SWDF complete RDF dump access
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_get_feasible_graph.yml'
+      - 'research/bridge_partition/candidate3_get_feasible_graph.py'
+  workflow_dispatch:
+jobs:
+  source-binary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Google Drive archive client
+        run: pip install gdown==5.2.0
+      - name: Download and SHA-pin official SWDF graph if downloadable; fail closed
+        run: python -u research/bridge_partition/candidate3_get_feasible_graph.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-original-FEASIBLE-SWDF-source
+          path: results_candidate3_SWDF_original_dump/report.json
+          if-no-files-found: error
