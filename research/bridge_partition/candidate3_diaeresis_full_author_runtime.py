@@ -43,6 +43,7 @@ def stage(name,cmd,env=None,timeout=300):
         details["state"]="BLOCKED";details["exit_code"]=125
     details["elapsed_s"]=round(time.monotonic()-t,2)
     details["lines_logged"]=len(log.splitlines())
+    details["head"]=log.splitlines()[:30]
     details["tail"]=log.splitlines()[-35:]
     (OUT/(name+".log")).write_text(log)
     print("AUTHOR_BASELINE_STAGE",name,details["state"],
@@ -147,7 +148,8 @@ exec "$JAVA_HOME/bin/java" -cp "$SPARK_HOME/jars/*" org.apache.hadoop.fs.FsShell
     print("DIAERESIS_FULL_RUNTIME_GATE_START",flush=True)
     print(json.dumps({k:v for k,v in d.items() if k!="stages"}|
       {"stages":[{"stage":s["stage"],"state":s["state"],"exit_code":s["exit_code"],
-          "elapsed_s":s["elapsed_s"],"tail":s["tail"][-8:]} for s in d["stages"]]},
+          "elapsed_s":s["elapsed_s"],"head":s["head"][:22],
+          "tail":s["tail"][-8:]} for s in d["stages"]]},
       indent=2),flush=True)
     print("DIAERESIS_FULL_RUNTIME_GATE_END",flush=True)
 if __name__=="__main__":main()
