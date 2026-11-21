@@ -1,0 +1,26 @@
+name: Candidate 3 fully new real Bio2RDF archive range-only inventory
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_largeRDF_archive_inventory.yml'
+      - 'research/bridge_partition/candidate3_largeRDF_archive_inventory.py'
+  workflow_dispatch:
+jobs:
+  range-only-no-test-unseal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install immutable read-only HTTP ZIP index reader
+        run: pip install remotezip==0.12.3
+      - name: Inventory complete RDF graphs and query filenames, no performance labels
+        run: python -u research/bridge_partition/candidate3_largeRDF_archive_inventory.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-fresh-LargeRDF-archive-listing
+          path: results_candidate3_external_largeRDF_archive_index/report.json
+          if-no-files-found: error
