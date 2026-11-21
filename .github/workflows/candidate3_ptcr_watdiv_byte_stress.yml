@@ -1,0 +1,24 @@
+name: Candidate 3 PTCR byte-budget disjoint WatDiv10M stress test
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_ptcr_watdiv_byte_stress.yml'
+      - 'research/bridge_partition/candidate3_ptcr_watdiv_byte_stress.py'
+  workflow_dispatch:
+jobs:
+  physical-budget-ptcr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Same maximum 25MB migration budget, disjoint predicate-family benchmark
+        run: python -u research/bridge_partition/candidate3_ptcr_watdiv_byte_stress.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-PTCR-WatDiv10M-byte-budget
+          path: results_candidate3_PTCR_watdiv_family_stress/report.json
+          if-no-files-found: error
