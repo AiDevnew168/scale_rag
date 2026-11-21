@@ -42,6 +42,20 @@ def prepare_source():
         assert z.namelist()==["swdf.nt"]
         graph=z.read("swdf.nt")
     assert hashlib.sha256(graph).hexdigest()=="97575d036db4e55fa89f25231d3afb2c427555bce4a60fc429f902ddf7c45400"
+    fixed_lines=[];legacy_lines=0;legacy_line_numbers=[]
+    for line_index,line in enumerate(graph.splitlines(keepends=True),start=1):
+        try:line.decode("utf8");fixed_lines.append(line)
+        except UnicodeDecodeError:
+            legacy_lines+=1
+            if len(legacy_line_numbers)<15:legacy_line_numbers.append(line_index)
+            fixed_lines.append(line.decode("latin1").encode("utf8"))
+    graph=b"".join(fixed_lines)
+    if legacy_lines>len(fixed_lines)*0.05:raise RuntimeError("Excess non-UTF8 legacy lines")
+    normalization={"source_encoding_hypothesis":"UTF-8 valid lines kept as-is; invalid lines re-decoded Latin-1 then UTF-8",
+         "invalid_utf8_line_count":legacy_lines,"first_invalid_line_numbers":legacy_line_numbers,
+         "normalized_sha256":hashlib.sha256(graph).hexdigest(),
+         "normalized_graph_bytes":len(graph),"original_graph_sha256":"97575d036db4e55fa89f25231d3afb2c427555bce4a60fc429f902ddf7c45400"}
+    OUT.joinpath("source_utf8_transcode_audit.json").write_text(json.dumps(normalization,indent=2))
     queryraw=sd.get_queries()
     assert hashlib.sha256(queryraw).hexdigest()=="7d239ff96296a321148d3da3d2ec80ad7c1e439afff2d6e2753c12b2da13c0c3"
     allrecs,_=sd.parse_records(queryraw)
@@ -287,6 +301,7 @@ def main():
      "source_graph_sha256":sd.GRAPH_SHA,
      "source_query_sha256":"7d239ff96296a321148d3da3d2ec80ad7c1e439afff2d6e2753c12b2da13c0c3",
      "physical_dataset_RDF_triples":central_size,
+     "source_encoding_audit":json.loads((OUT/"source_utf8_transcode_audit.json").read_text()),
      "shard_raw_bytes_initial":loads,
      "shard_per_worker_raw_byte_limit":cap,
      "migration_max_raw_bytes_per_action":BUDGET,
