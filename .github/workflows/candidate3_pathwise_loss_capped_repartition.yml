@@ -1,0 +1,19 @@
+name: Candidate 3 adversarial bounded-loss migration and rollback control
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_pathwise_loss_capped_repartition.yml'
+      - 'research/bridge_partition/candidate3_pathwise_loss_capped_repartition.py'
+      - 'research/bridge_partition/test_candidate3_pathwise_loss_capped_repartition.py'
+  workflow_dispatch:
+jobs:
+  adversarial-distribution-shift-stoploss:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check pathwise loss invariant with random adversarial shifts and fail-closed semantics
+        run: python research/bridge_partition/test_candidate3_pathwise_loss_capped_repartition.py
