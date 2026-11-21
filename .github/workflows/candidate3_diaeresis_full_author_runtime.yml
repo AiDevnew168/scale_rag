@@ -1,0 +1,50 @@
+name: Candidate 3 original DIAERESIS full Spark algorithm runtime
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_diaeresis_full_author_runtime.yml'
+      - 'research/bridge_partition/candidate3_diaeresis_full_author_runtime.py'
+  workflow_dispatch:
+jobs:
+  author-original-all-three-stages:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: isl/DIAERESIS
+          ref: 22dfe190078973f644f5d6279181e54ec116f6e3
+          path: diaeresis-pinned
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Compile unmodified author algorithm with original Maven dependency metadata
+        working-directory: diaeresis-pinned
+        run: mvn -B -DskipTests package
+      - name: Supply Spark 3.1.1 and its Hadoop FsShell original filesystem API
+        run: |
+          pip install pyspark==3.1.1
+          python -c 'import pyspark,os; p=os.path.dirname(pyspark.__file__); assert os.path.exists(p+"/bin/spark-submit")'
+          echo "SPARK_HOME=$(python -c 'import pyspark,os;print(os.path.dirname(pyspark.__file__))')" >> "$GITHUB_ENV"
+      - name: Run original DIAERESIS four-way DAP, query translator and query execution with original SWDF
+        run: python -u research/bridge_partition/candidate3_diaeresis_full_author_runtime.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-unmodified-DIAERESIS-full-runtime-attempt
+          path: results_candidate3_diaeresis_faithful_runtime/
+          if-no-files-found: error
+      - name: Strict completion gate, an attempted run is not a completed baseline
+        run: |
+          python - <<'PY'
+          import json
+          p='results_candidate3_diaeresis_faithful_runtime/report.json'
+          d=json.load(open(p))
+          assert d['full_original_three_stage_execution'], d.get('blocker', d['gate'])
+          print('ORIGINAL_AUTHOR_FULL_DAP_TRANSLATE_EXECUTE_PASS')
+          PY
