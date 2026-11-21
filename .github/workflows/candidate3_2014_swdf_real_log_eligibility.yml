@@ -1,0 +1,26 @@
+name: Candidate 3 actually timestamped LSQ SWDF query-eligibility gate
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_2014_swdf_real_log_eligibility.yml'
+      - 'research/bridge_partition/candidate3_2014_swdf_real_log_eligibility.py'
+  workflow_dispatch:
+jobs:
+  chronological-eligibility-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Parse new genuine 2014 LSQ log with fully strict SPARQL parser, no answer execution
+        run: |
+          pip install rdflib==7.5.0
+          python -u research/bridge_partition/candidate3_2014_swdf_real_log_eligibility.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-SWDF-chronological-source-eligibility
+          path: results_candidate3_SWDF_2014_chronological/report.json
+          if-no-files-found: error
