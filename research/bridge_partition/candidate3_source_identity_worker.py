@@ -10,12 +10,14 @@ This is a physical *fragment store*, not a native federated query planner.
 import hashlib,json,threading,multiprocessing as mp,urllib.request
 from http.server import ThreadingHTTPServer,BaseHTTPRequestHandler
 from pyoxigraph import Store,RdfFormat
+import candidate3_selective_fetch_transport as selective
 
 def serve(worker_id, data, ready):
     fragments={p:bytes(raw) for p,raw in data.items()}
     store=Store()
     store.bulk_load(input=b"".join(fragments.values()),format=RdfFormat.N_TRIPLES)
     lock=threading.RLock()
+    parsed_source_cache={}  # lazy keyed by original predicate; immutable byte-identity
     class Handler(BaseHTTPRequestHandler):
         def log_message(self,*args):pass
         def reply(self,status,value):
@@ -42,12 +44,31 @@ def serve(worker_id, data, ready):
                         parts=[fragments[p] for p in req["predicates"]]
                     except KeyError:return self.reply(409,b"predicate-not-here")
                 return self.reply(200,b"".join(parts))
+            if self.path=="/selective-fragments":
+                # This endpoint is an optional TRAIN-only architectural control,
+                # never a mutation or rewrite of the original SWDF requests.
+                try:
+                    req=json.loads(body)
+                    filters=req["filters"]
+                    if not isinstance(filters,dict) or not filters:
+                        return self.reply(400,b"missing-filters")
+                    with lock:
+                        if not all(p in fragments for p in filters):
+                            return self.reply(409,b"predicate-not-here")
+                        response=b"".join(
+                            selective.filter_fragment(fragments[p],clauses,
+                                cache=parsed_source_cache,cache_key=p)
+                            for p,clauses in sorted(filters.items()))
+                except (ValueError,TypeError,KeyError,RuntimeError):
+                    return self.reply(400,b"invalid-selective-request")
+                return self.reply(200,response)
             if self.path=="/insert":
                 p=self.headers["X-Predicate"]
                 with lock:
                     if p in fragments:return self.reply(409,b"duplicate-fragment")
                     store.bulk_load(input=body,format=RdfFormat.N_TRIPLES)
                     fragments[p]=body
+                    parsed_source_cache.pop(p,None)
                 return self.reply(200,json.dumps({"sha256":hashlib.sha256(body).hexdigest(),
                      "bytes":len(body),"predicate":p}).encode())
             if self.path=="/delete":
@@ -56,6 +77,7 @@ def serve(worker_id, data, ready):
                     if p not in fragments:return self.reply(409,b"fragment-missing")
                     store.update(f"DELETE WHERE {{ ?s {p} ?o }}")
                     del fragments[p]
+                    parsed_source_cache.pop(p,None)
                 return self.reply(200,b'{"deleted":true}')
             return self.reply(404,b"unknown")
     server=ThreadingHTTPServer(("127.0.0.1",0),Handler)
