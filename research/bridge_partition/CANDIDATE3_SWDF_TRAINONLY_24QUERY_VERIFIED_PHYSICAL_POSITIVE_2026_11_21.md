@@ -40,6 +40,14 @@ Independent Python recalculation of the exact uploaded 48 deidentified rows grou
 - These are DESCRIPTIVE sensitivity quantiles, **not a 95% coverage guarantee** under natural temporal autocorrelation, query selection, caching, or unseen workloads. The source selection is deliberately restricted to anchored eligible training texts and is not representative of the whole original service.
 - The newly tested independent query-cluster audit has 7/7 tests passing: https://github.com/AiDevnew168/scale_rag/actions/runs/44919572182.
 
+## Newly identified dependence: effective predicate-family diversity not yet established
+
+Independent grouped inspection of the original frozen 48 physical rows found **only 7 distinct full-baseline response byte sizes** across 24 unique texts; **19 of 24 texts occupy just two baseline-byte-size groups**. Byte size alone is an imperfect proxy for original predicate-set family, so do NOT assert there are exactly seven true predicate families.
+
+Post-hoc descriptive equal-*baseline-byte-footprint* resampling of the 7 footprint-group mean savings (10,000 seeded samples) gives approximately **-10.7163 to +62.4483 ms**, and an equally weighted footprint-group mean of **+31.0331 ms**. This sensitivity range INCLUDES ZERO, unlike the +45.709 to +72.327 ms query-text bootstrap range. Both are descriptive/selection-dependent and not honest temporal population CI. The original development gate still passes on the predeclared 24-text estimand; however **cross-family robustness must be withheld until source-exact hashed predicate families are independently audited**, not inferred from byte sizes.
+
+An exact source-SHA/predicate family audit was subsequently launched and is tracked in GitHub; it must not modify or retroactively select the original 24 measured texts.
+
 ## Why the result is promising but NOT a publishable original solution
 
 1. It changes the physical query execution model by filtering source-original NTriples triple patterns before TCP transport (a known basic optimization). Previous predicate-location swaps/replicas cannot reduce raw response bytes under the full-fragment fetch invariant.
