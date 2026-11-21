@@ -1,0 +1,24 @@
+name: Candidate 3 byte-equal selective replication adversary
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_byte_matched_replication.yml'
+      - 'research/bridge_partition/candidate3_byte_matched_replication.py'
+  workflow_dispatch:
+jobs:
+  replica-vs-PTCR:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compare byte-capped replica, hybrid and PTCR using minimum shard set cover
+        run: python -u research/bridge_partition/candidate3_byte_matched_replication.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-equal-byte-replication-adversary
+          path: results_candidate3_selective_replica/report.json
+          if-no-files-found: error
