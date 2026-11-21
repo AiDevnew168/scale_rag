@@ -1,0 +1,24 @@
+name: Candidate 3 external WatDiv original graph/query audit
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_external_watdiv_preflight.yml'
+      - 'research/bridge_partition/candidate3_external_watdiv_preflight.py'
+  workflow_dispatch:
+jobs:
+  third-family-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Inspect original WatDiv data and stress query hashes without training any policy
+        run: python -u research/bridge_partition/candidate3_external_watdiv_preflight.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-external-WatDiv-audit
+          path: results_candidate3_watdiv_external/report.json
+          if-no-files-found: error
