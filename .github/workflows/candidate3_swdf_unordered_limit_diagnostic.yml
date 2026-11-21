@@ -1,0 +1,25 @@
+name: Candidate 3 SWDF calibration-only SPARQL unordered LIMIT semantics
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_swdf_unordered_limit_diagnostic.yml'
+      - 'research/bridge_partition/candidate3_swdf_unordered_limit_diagnostic.py'
+  workflow_dispatch:
+jobs:
+  calibration-limit-cause:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pyoxigraph==0.5.13 rdflib==7.5.0 gdown==5.2.0
+      - name: Diagnose legal SELECT LIMIT without ORDER BY on original calibration SPARQL
+        run: python -u research/bridge_partition/candidate3_swdf_unordered_limit_diagnostic.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-SWDF-unordered-limit-semantics
+          path: results_candidate3_SWDF_limit_semantics/report.json
+          if-no-files-found: warn
