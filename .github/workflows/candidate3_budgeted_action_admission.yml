@@ -1,0 +1,34 @@
+name: Candidate 3 budgeted migration and replication admission
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_budgeted_action_admission.yml'
+      - 'research/bridge_partition/candidate3_budgeted_action_admission.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  training-only-action-selection:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Load frozen RDF-byte replica and swap benchmark
+        uses: actions/download-artifact@v4
+        with:
+          name: candidate3-equal-byte-replication-adversary
+          run-id: 44871515750
+          github-token: ${{ github.token }}
+          path: bundle
+      - name: Economic admission from prior plus day0 only
+        run: python -u research/bridge_partition/candidate3_budgeted_action_admission.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-BEND-budgeted-admission
+          path: results_candidate3_BEND/report.json
+          if-no-files-found: error
