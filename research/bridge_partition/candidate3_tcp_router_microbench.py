@@ -61,6 +61,7 @@ def run_one(q,placement,split,servers,parallel,pool):
 
 def measure(test,before,after,split,servers,parallel,reps=5):
     old=[];new=[]
+    by_template={i:[] for i in range(len(test))}
     rng=random.Random(20261121)
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
         for q in test:
@@ -78,8 +79,13 @@ def measure(test,before,after,split,servers,parallel,reps=5):
                     right=run_one(q,after,split,servers,parallel,pool)
                     left=run_one(q,before,split,servers,parallel,pool)
                     vals=(left,right)
-                old.append(vals[0]);new.append(vals[1]);pairs.append(vals[0]-vals[1])
-    return {"n_pairs":len(pairs),"median_baseline_ms":round(statistics.median(old),4),
+                old.append(vals[0]);new.append(vals[1]);pairs.append(vals[0]-vals[1]);by_template[j].append(vals[0]-vals[1])
+    grouped=[statistics.mean(by_template[i]) for i in range(len(test))]
+    boot_rng=random.Random(20261121)
+    bootstrap=sorted(sum(grouped[boot_rng.randrange(len(grouped))] for _ in grouped) for _ in range(4000))
+    return {"n_templates":len(grouped),"template_bootstrap_ci95_saved_ms_one_batch":[round(bootstrap[99],4),round(bootstrap[3899],4)],
+        "per_template_mean_saved_ms":[round(v,4) for v in grouped],
+        "n_pairs":len(pairs),"median_baseline_ms":round(statistics.median(old),4),
         "median_swap_ms":round(statistics.median(new),4),
         "mean_baseline_ms":round(statistics.mean(old),4),
         "mean_swap_ms":round(statistics.mean(new),4),
@@ -122,6 +128,7 @@ def main():
                 values["hypothetical_net_ms_one_batch_minus_median_migration"]=round(
                     values["saved_ms_normalized_to_one_20_query_batch"]-
                     physical["local_loopback_median_ms"],4)
+                values["conservative_ci95_net_after_p95_migration_ms"]=[round(x-physical["local_loopback_p95_nearest_ms"],4) for x in values["template_bootstrap_ci95_saved_ms_one_batch"]]
                 records[label]=values
     finally:
         for s in servers:s.shutdown();s.server_close()
