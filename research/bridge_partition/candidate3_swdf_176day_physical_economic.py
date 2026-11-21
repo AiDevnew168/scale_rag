@@ -18,7 +18,7 @@ SOURCE/SCIENTIFIC LOCK:
   NOT verified as-of-2014 graph snapshot, and NOT a Spark/DIAERESIS equal
   architecture competitor nor cross-host proof.
 """
-import collections,datetime,gzip,hashlib,heapq,json,math,random,statistics,time,zipfile
+import collections,datetime,gzip,hashlib,heapq,json,math,random,re,statistics,time,zipfile
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from pyoxigraph import Store,RdfFormat
@@ -105,7 +105,7 @@ def get_dated_sample(sourcepath,predicates):
             if day is None:continue
             q=raw.parse_query(m.group(3))
             if q is None:continue
-            if "SELECT" not in q.upper():continue
+            if not re.search(r"\\bSELECT\\b",q,re.I):continue
             original_selects+=1
             h=hashlib.sha256(q.encode()).hexdigest()
             if h not in parse_cache:
