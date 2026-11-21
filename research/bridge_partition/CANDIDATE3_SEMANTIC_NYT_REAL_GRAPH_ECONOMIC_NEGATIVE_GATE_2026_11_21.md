@@ -105,3 +105,23 @@ After this immutably frozen decision, the physically built moved candidate was e
 **Limitation:** this is a *single* new synthetic query distribution derived from a genuine source graph; bootstrap intervals assume family exchangeability and do not certify natural workload drift or monetary profitability. No true cross-host execution, faithful published prior art method comparison on same original graph/storage/engine, nor actual independent chronological user queries. Does not prove journal novelty or SOTA superiority.
 
 Together with NYT, these two complete-original-real-RDF tests show **the naive move frequently loses economic net benefit**, while a conservative pretest calibrated no-move admission can correctly reject the loss on the unseen DrugBank corpus. This is useful limited empirical evidence for abstention, not a universal risk guarantee.
+
+## G. Authentic published baseline's COMPLETE original software execution: PASS, with explicit scope
+
+After the author's original DAP/Translator source failed on `?variable_predicate` examples because its `subPartIndex` map was unavailable, a **structure-only** eligible query contract selected the lexically first three **unchanged original author source queries with URI-predicate-only BGP**, out of 279 authored files. Exactly four author original queries met that contract; selected `query101.txt`, `query118.txt`, `query35.txt`. Neither runtime nor answer labels were used to choose these three. The originally failed general dynamic-predicate support remains unsupported and MUST be disclosed.
+
+The published author's original Scala source at commit `22dfe190078973f644f5d6279181e54ec116f6e3` was **never edited**. With Java 8, Maven, Spark 3.1.1 `local[2]` and actual Hadoop `FsShell` mapped to local `file://` filesystem (explicit correct `core-site.xml`), the complete original SWDF 51,587,578-byte N-Triples instances and 100,612-byte schema were processed.
+
+**GitHub Actions full pipeline SUCCESS**: https://github.com/AiDevnew168/scale_rag/actions/runs/44881159983
+
+| Unmodified author stage | Status | Measured wall-clock in Spark single-VM GitHub runner |
+|---|---|---:|
+| DAP RDF partitioner (four shards) | **PASS exit 0**, 4 partitions | **247.38 s** |
+| QueryTranslator (original 3 compatible author SELECTs) | **PASS exit 0** | **8.91 s** |
+| QueryProcessor executing produced Spark SQL | **PASS exit 0** | **17.45 s** |
+
+Original QueryProcessor reported three individual query execution time fields **244ms**, **2917ms**, **124ms** respectively (original author `results` and console log). These are original author-specific definitions (including cached partition loads, distinct Spark execution behavior), NOT directly comparable to our Oxigraph per-query wall time on different graphs/hardware. They do not show our algorithm is better.
+
+This closes the earlier narrower blocker **"unavailable compiled/runtime published reference"**: the author's actual full three-stage pipeline now runs, not just a successful build. It does **NOT** close the paper-level blocker "matched-resource, matched-input, matched-query, complete-answer-correctness and full-prior-art comparative superiority." The full same-run original author source+query interoperability test `candidate3_diaeresis_same_source_oxigraph_check.py` is a separately authored diagnostic, not yet included in this table until its CI completes.
+
+Important: The original DIAERESIS Spark author source uses a wholly different storage and query plan from a four-TCP-shard Oxigraph server; comparisons across separate tests or on published elapsed times alone violate scientific controls.
