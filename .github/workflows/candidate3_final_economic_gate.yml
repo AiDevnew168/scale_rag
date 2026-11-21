@@ -1,0 +1,31 @@
+name: Candidate 3 frozen final economic proxy and novel-pattern gate
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_final_economic_gate.yml'
+  workflow_dispatch:
+jobs:
+  frozen-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        month: [january, february, march]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned dependencies
+        run: pip install numpy==2.1.3 pymetis==2025.2.2 mtkahypar==1.7.1 scikit-learn==1.6.1
+      - name: Evaluate frozen policy and same-capacity one-swap controls
+        env:
+          GATE_MONTH: ${{ matrix.month }}
+        run: python research/bridge_partition/candidate3_final_economic_gate.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-final-${{ matrix.month }}
+          path: results_candidate3_final_${{ matrix.month }}/
+          if-no-files-found: error
