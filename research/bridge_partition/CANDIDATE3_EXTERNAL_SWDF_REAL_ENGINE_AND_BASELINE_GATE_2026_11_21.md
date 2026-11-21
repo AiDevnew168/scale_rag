@@ -83,3 +83,32 @@ https://github.com/AiDevnew168/scale_rag/actions/runs/44876436118
 The paper-worthy open problem is still accurate positive-net migration/replication admission **under genuinely unpredictable tail/drift**, full correctness, true byte and index costs, matched incumbent code and independently heldout source. We have not proved a general economic improvement.
 
 **Do not retrospectively repurpose any WatDiv, Wikidata 2018 or already-opened SWDF test labels as independent confirmation.**
+
+## 7. Completed raw-source fragment identity correction — 2026-11-21
+
+The physical bugfix **finished** (CI success for execution, **NOT** paper criteria):
+https://github.com/AiDevnew168/scale_rag/actions/runs/44876361186
+
+Using the original unmodified `swdf.nt` N-Triples fragment bytes at the TCP worker boundary, every one of the **37/37 calibration-relevant predicate source fragments matched byte-for-byte** for each of the five policies. This includes the four blank-node-bearing predicates that previously mismatched with independently reminted SPARQL `CONSTRUCT` output.
+
+All four workers still owned real separate Oxigraph indexes and served via HTTP TCP; inserts and deletes altered both indexed data and raw fragment inventory. The coordinator still ran each **original unmodified full SELECT** with Oxigraph. A method-local replica identity check was corrected so duplicate full copies are individually compared, not concatenated.
+
+**Original full-query exact multiset correctness still FAILS** in the already-opened heldout (102 textual queries ×2 repeats, with one central query above 20k row guard, so 202 evaluated pairs). Per-policy equality of **both** baseline and action responses with centralized original full SELECT was:
+
+| Method | Exact full-answer paired observations / 202 | Exactness gate | Actual moved N-Triples bytes | Real move+index wall time (ms) | Total N-Triples bytes saved (in tested requests) | Extra shard contacts saved |
+|---|---:|---|---:|---:|---:|---:|
+| no move | 182 | FAIL | 0 | 0 | 0 | 0 |
+| one swap | 180 | FAIL | 670,057 | 27.1582 | 0 | 0 |
+| two-swap greedy | 178 | FAIL | 2,003,790 | 82.9694 | 0 | -42 |
+| one replica | 185 | FAIL | 314,196 | 16.9808 | 0 | 0 |
+| swap+replica | 183 | FAIL | 984,253 | 41.5713 | 0 | 0 |
+
+These remaining exact-multiset divergences may include **legally nondeterministic SPARQL `LIMIT` without `ORDER BY`**, not necessarily false answers; a calibration-only diagnostic previously showed some such divergences disappear with a *modified ordered query*. It would be improper to use an ORDER BY rewriting as proof of original-query equivalence. Other causes cannot yet be excluded. The previously opened SWDF heldout cannot become an independent confirmatory test by rerunning after this correction.
+
+**Net realized positive economic benefit is NOT CERTIFIED for any policy** because the original full-output strict correctness gate failed, and even physical source-fragment identity success does not establish distributed query correctness. No correct-answer economic superiority over actual WISE/WASP/DIAERESIS was established. The strongest incumbent source (DIAERESIS) was **successfully built** in run 44876436118, but has not been faithfully executed against matched source under Spark/HDFS.
+
+The *independent chronological* AKSW/LSQ 2014 SWDF sample was also separately audited: its 2,007 HTTP records yielded only **4 strict-eligible original SELECT occurrences / 3 unique query texts**. It is a test fixture, not a sufficient independent time-series cohort. Run: https://github.com/AiDevnew168/scale_rag/actions/runs/44876014244.
+
+**Final decision for this gate: SYSTEM ENGINEERING PARTIAL PASS (full source, four physical indexed workers, migration measurement, 37/37 calibration fragment fidelity); CONFIRMATORY PAPER/PROFIT GATE FAIL/BLOCKED (strict full original SELECT exactness, matched published runtime, independent temporal sample, and net real economic superiority).**
+
+The next scientifically necessary change is a SPARQL-semantic-validity evaluator for unordered `LIMIT` and proper blank-node isomorphism on full answers **fixed before accessing a genuinely new heldout**, plus strong equal-resource Spark/Hadoop counterpart or an equivalently faithful runnable contemporary baseline and true cross-host measurements. No source re-labeling, score-based exclusion, or test-driven tuning may be presented as fresh confirmation.
