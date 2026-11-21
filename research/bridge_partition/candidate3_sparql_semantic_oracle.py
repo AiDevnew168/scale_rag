@@ -111,28 +111,40 @@ def _fits_row(candidate,reference,fwd,back):
     return local_forward,local_backward
 
 def _limited_blank_subset(candidate,reference):
-    if len(candidate)>MAX_BLANK_LIMIT_ROWS or len(reference)>MAX_BLANK_REFERENCE_ROWS:
+    # Index actual reference bag by the grounded components of each row.
+    # This permits large 30k-reference result sets when LIMIT is small,
+    # without pretending blank labels are globally comparable.
+    if len(candidate)>MAX_BLANK_LIMIT_ROWS or len(reference)>30000:
         raise Inconclusive("blank_node_limit_subset_exceeds_exact_search_cap")
-    # The identity map is shared for all rows. Equal reference occurrences
-    # cannot be reused (SPARQL bag/submultiset semantics).
-    used=[False]*len(reference)
+    def signature(row):
+        return tuple(("bnode",) if t is not None and t[0]=="bnode" else t
+                     for t in row)
+    groups=collections.defaultdict(collections.Counter)
+    for row in reference:
+        groups[signature(row)][row]+=1
+    sizes=collections.Counter(signature(row) for row in candidate)
+    if any(sum(groups[key].values())<n for key,n in sizes.items()):
+        return False
+    # Match the most selective row first. A single bnode-renaming map must
+    # hold across ALL selected rows, not a fresh map for each row.
+    ordered=sorted(candidate,key=lambda row:(len(groups[signature(row)]),
+                                              signature(row)))
     states=0
-    order=sorted(range(len(candidate)),key=lambda i:
-        sum(_fits_row(candidate[i],r,{}, {}) is not None for r in reference))
     def search(depth,fwd,back):
         nonlocal states
         states+=1
         if states>MAX_SEARCH_STATES:
             raise Inconclusive("blank_node_mapping_search_budget_exceeded")
-        if depth==len(order):return True
-        row=candidate[order[depth]]
-        for i,refrow in enumerate(reference):
-            if used[i]:continue
+        if depth==len(ordered):return True
+        row=ordered[depth]
+        choices=groups[signature(row)]
+        for refrow,count in list(choices.items()):
+            if not count:continue
             maps=_fits_row(row,refrow,fwd,back)
             if maps is None:continue
-            used[i]=True
+            choices[refrow]-=1
             if search(depth+1,*maps):return True
-            used[i]=False
+            choices[refrow]+=1
         return False
     return search(0,{}, {})
 
