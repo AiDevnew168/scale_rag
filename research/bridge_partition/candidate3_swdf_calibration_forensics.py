@@ -31,7 +31,7 @@ def main():
     assert len(target)==4
     results=[]
     for r in target:
-        groups=core.shards_for_query(r["pattern"],route,range(4),set())
+        groups=core.shards_for_query(r["pattern"],route,set())
         # Physically retrieved bytes are byte-exact source fragments; no worker
         # process needed to isolate root cause of original data completeness.
         collected=[]
