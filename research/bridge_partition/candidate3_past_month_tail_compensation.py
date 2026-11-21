@@ -8,7 +8,7 @@ novel distinct-locality and novel request touch nonregression, no future
 access until scoring. Also test simpler two-swap head-greedy, June-only
 shadow-pair and static one-swap. Unit ID capacity, not RDF bytes.
 """
-import datetime, json, os, math, time
+import datetime, json, os, math, time, random
 from collections import Counter,defaultdict
 from pathlib import Path
 import temporal_wikidata as base
@@ -124,6 +124,25 @@ def search(static,first,day0,past,seen_june):
        "feasible_safe_90head":len(keep90),
        "feasible_safe_75head":len(keep75)}
 
+def day_cluster_ci(rows, alt, baseline):
+    day=defaultdict(lambda:Counter())
+    for d,q in rows:day[d][q]+=1
+    blocks=[]
+    for d,counts in sorted(day.items()):
+        delta=sum(n*(locked.span(baseline,q)-locked.span(alt,q)) for q,n in counts.items())
+        blocks.append((delta,sum(counts.values())))
+    assert len(blocks)>=20
+    rng=random.Random(20261121)
+    boots=[]
+    for _ in range(3000):
+        chosen=[blocks[rng.randrange(len(blocks))] for __ in blocks]
+        boots.append(10000*sum(v[0] for v in chosen)/sum(v[1] for v in chosen))
+    boots.sort()
+    return {"days":len(blocks),"saved_extra_touches":sum(x[0] for x in blocks),
+      "saved_extra_touches_per_10000_future_requests":round(
+        10000*sum(x[0] for x in blocks)/sum(x[1] for x in blocks),4),
+      "day_cluster_bootstrap95_per_10000_requests":[round(boots[74],4),round(boots[2924],4)]}
+
 def main():
     tic=time.perf_counter()
     raw,jsha=base.load()
@@ -145,11 +164,13 @@ def main():
     seen={q for _,q in hist}
     policies,diag=search(static,first,day0,past,seen)
     output={}
+    placements={}
     for name,choice in policies.items():
         part=list(static) if choice.get("is_static",False) or choice.get("abstained",False) else list(first)
         if choice.get("second_swap") is not None and not choice.get("abstained",False):
             i,j=choice["second_swap"];part[i],part[j]=part[j],part[i]
         assert sorted(Counter(part).values())==[30]*4
+        placements[name]=part
         output[name]={"decision":choice,"future_outcome":metrics(future,static,part,seen)}
     result={"schema":"candidate3-causal-previous-month-tail-compensated-repartitioning-v1",
       "month":month,"sources_sha256":{"June":jsha,"previous_month":prevsha,"current_month":nowsha},
@@ -160,6 +181,9 @@ def main():
       "future_evaluation_only":current_name+" days after the observed first day",
       "frozen_first_swap":meta,
       "diagnostics":diag,"policies":output,
+      "paired_day_cluster_uncertainty":{
+        "PTCR90_vs_frozen":day_cluster_ci(future,placements["PTCR_90_prior_novel_touches"],placements["frozen_one_swap"]),
+        "PTCR90_vs_greedy_two_swap":day_cluster_ci(future,placements["PTCR_90_prior_novel_touches"],placements["two_swap_day0_greedy"])},
       "elapsed_sec":round(time.perf_counter()-tic,2),
       "limitations":[
         "All Jan/Feb/Mar 2018 logs have been opened and analyzed in prior experiments; exploratory retrospective only",
