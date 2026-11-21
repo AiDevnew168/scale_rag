@@ -1,0 +1,31 @@
+name: Candidate3 original RDF four-worker cold parse and RSS physical microbenchmark
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_sourceonly_worker_cache_cold_cost.yml'
+      - 'research/bridge_partition/candidate3_sourceonly_worker_cache_cold_cost.py'
+  workflow_dispatch:
+jobs:
+  original-graph-deterministic-cache-rss:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pyoxigraph==0.5.13 rdflib==7.5.0 gdown==5.2.0 remotezip==0.12.3
+      - name: Confirm source-only program compiles and worker identity regressions pass
+        run: |
+          python -m py_compile research/bridge_partition/candidate3_sourceonly_worker_cache_cold_cost.py
+          python -m unittest research/bridge_partition/test_candidate3_selective_fetch_transport.py -v
+      - name: Run physically indexed original four-worker source cache cold and warm RPC cost
+        run: python -u research/bridge_partition/candidate3_sourceonly_worker_cache_cold_cost.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-original-worker-RDF-cache-cold-RSS
+          path: |
+            results_candidate3_sourceonly_worker_cold_cache_cost/report.json
+            results_candidate3_sourceonly_worker_cold_cache_cost/pre_execution_selection.json
+          if-no-files-found: warn
