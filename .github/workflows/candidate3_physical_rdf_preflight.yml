@@ -1,0 +1,24 @@
+name: Candidate 3 real RDF physical-byte transfer preflight
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_physical_rdf_preflight.yml'
+  workflow_dispatch:
+jobs:
+  physical-rdf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy==2.1.3 pymetis==2025.2.2 scikit-learn==1.6.1
+      - name: Retrieve official sampled RDF triples and measure loopback transfer
+        run: python research/bridge_partition/candidate3_physical_rdf_preflight.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-rdf-sample-cost
+          path: results_candidate3_physical_rdf/
+          if-no-files-found: error
