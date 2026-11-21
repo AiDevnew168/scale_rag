@@ -1,0 +1,30 @@
+name: Candidate 3 original 176day organic SWDF four-worker physical economic benchmark
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_swdf_176day_physical_economic.yml'
+      - 'research/bridge_partition/candidate3_swdf_176day_physical_economic.py'
+  workflow_dispatch:
+jobs:
+  strict-original-four-shard-physical-net:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile original source physical test and pin full RDF dependencies
+        run: |
+          python -m py_compile research/bridge_partition/candidate3_swdf_176day_physical_economic.py
+          pip install pyoxigraph==0.5.13 rdflib==7.5.0 gdown==5.2.0 remotezip==0.12.3
+      - name: Execute date-frozen original full SELECT with four physical indexed TCP shard processes and controls
+        run: python -u research/bridge_partition/candidate3_swdf_176day_physical_economic.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-original-176day-physical-SPARQL-economics
+          path: |
+            results_candidate3_SWDF_176day_physical_economics/report.json
+            results_candidate3_SWDF_176day_physical_economics/decision_frozen_before_test.json
+          if-no-files-found: warn
