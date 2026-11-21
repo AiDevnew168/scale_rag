@@ -1,0 +1,21 @@
+name: Candidate 3 RDF/SPARQL semantic validity locked regression
+on:
+  push:
+    paths:
+      - 'research/bridge_partition/candidate3_sparql_semantic_validity.py'
+      - 'research/bridge_partition/test_candidate3_sparql_semantic_validity.py'
+      - '.github/workflows/candidate3_sparql_semantic_validity.yml'
+  workflow_dispatch:
+jobs:
+  strict-semantics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Pin original real RDF engine
+        run: pip install pyoxigraph==0.5.13
+      - name: Test adversarial RDF-term exactness with no zero-bug acceptance
+        run: python -u research/bridge_partition/test_candidate3_sparql_semantic_validity.py
