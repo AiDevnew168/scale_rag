@@ -30,7 +30,7 @@ jobs:
         run: mvn -B -DskipTests package
       - name: Supply Spark 3.1.1 and its Hadoop FsShell original filesystem API
         run: |
-          pip install pyspark==3.1.1 rdflib==7.5.0
+          pip install pyspark==3.1.1 rdflib==7.5.0 pyoxigraph==0.5.13 gdown==5.2.0
           python -c 'import pyspark,os; p=os.path.dirname(pyspark.__file__); assert os.path.exists(p+"/bin/spark-submit")'
           echo "SPARK_HOME=$(python -c 'import pyspark,os;print(os.path.dirname(pyspark.__file__))')" >> "$GITHUB_ENV"
       - name: Run original DIAERESIS four-way DAP, query translator and query execution with original SWDF
