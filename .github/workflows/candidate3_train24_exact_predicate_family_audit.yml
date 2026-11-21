@@ -1,0 +1,28 @@
+name: Candidate 3 original TRAIN24 exact RDF predicate family-diversity source audit
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_train24_exact_predicate_family_audit.yml'
+      - 'research/bridge_partition/candidate3_train24_exact_predicate_family_audit.py'
+      - 'research/bridge_partition/test_candidate3_train24_exact_predicate_family_audit.py'
+  workflow_dispatch:
+jobs:
+  original-predicate-families-not-byte-size-proxies:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pyoxigraph==0.5.13 rdflib==7.5.0 gdown==5.2.0 remotezip==0.12.3
+      - name: Repeated family and colliding-byte signature tests
+        run: python -m unittest research/bridge_partition/test_candidate3_train24_exact_predicate_family_audit.py -v
+      - name: Full source-pinned exact family coverage of measured original 24 texts
+        run: python -u research/bridge_partition/candidate3_train24_exact_predicate_family_audit.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-verified-train24-exact-predicate-family-groups
+          path: results_candidate3_train24_exact_predicate_family_audit/report.json
+          if-no-files-found: warn
