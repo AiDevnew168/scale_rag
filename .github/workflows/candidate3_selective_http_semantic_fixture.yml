@@ -1,0 +1,18 @@
+name: Candidate 3 four-worker original NTriples selective HTTP semantic proof
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_selective_http_semantic_fixture.yml'
+      - 'research/bridge_partition/test_candidate3_selective_http_semantic_fixture.py'
+  workflow_dispatch:
+jobs:
+  strict-four-worker-synthetic-bnode-and-language-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pyoxigraph==0.5.13 rdflib==7.5.0 gdown==5.2.0 remotezip==0.12.3
+      - run: python -m unittest research/bridge_partition/test_candidate3_selective_http_semantic_fixture.py -v
