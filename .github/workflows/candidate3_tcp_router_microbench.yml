@@ -1,0 +1,24 @@
+name: Candidate 3 controlled serial-vs-parallel TCP economic component
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_tcp_router_microbench.yml'
+      - 'research/bridge_partition/candidate3_tcp_router_microbench.py'
+  workflow_dispatch:
+jobs:
+  routing-microbench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Controlled serial and parallel TCP routing comparison
+        run: python research/bridge_partition/candidate3_tcp_router_microbench.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-tcp-router-economics
+          path: results_candidate3_tcp_router/
+          if-no-files-found: error
