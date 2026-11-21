@@ -32,29 +32,36 @@ def download(source,maxlen):
     return bytes(data),{"source":url,"downloaded_bytes":len(data),"sha256":h.hexdigest(),**metadata}
 
 def catalogue(archive,type_name):
+    if type_name=="graph":
+        # Do NOT fully decompress the 1.54GB N-Triples member for metadata!
+        # Stream only the first three lines, then close the bzip2 stream.
+        with tarfile.open(fileobj=io.BytesIO(archive),mode="r|bz2") as tar:
+            first_member=next(m for m in tar if m.isfile())
+            with tar.extractfile(first_member) as f:
+                head=list(islice(f,3))
+        return {"first_member":first_member.name,
+                "first_member_uncompressed_bytes":first_member.size,
+                "graph_inventory_is_partial":True,
+                "head_first_three_lines":[x.decode("utf8",errors="replace")[:700] for x in head]}
     files=[];sample={}
-    mode="r:bz2" if type_name=="graph" else "r:gz"
-    with tarfile.open(fileobj=io.BytesIO(archive),mode=mode) as tar:
+    with tarfile.open(fileobj=io.BytesIO(archive),mode="r:gz") as tar:
         members=[m for m in tar.getmembers() if m.isfile()]
         for m in members:
             item={"name":m.name,"uncompressed_bytes":m.size}
             files.append(item)
-            if type_name=="queries":
-                if m.size>6*1024*1024:continue
-                data=tar.extractfile(m).read()
-                text=data.decode("utf8",errors="replace")
-                if any(w in text for w in ("SELECT","PREFIX","WHERE")):
-                    sample[m.name]={"sha256":hashlib.sha256(data).hexdigest(),
-                        "select_occurrences":text.upper().count("SELECT"),
-                        "preview_first_1000_chars":text[:1000]}
-            else:
-                if len(sample)>=3:continue
-                with tar.extractfile(m) as f:
-                    first=list(islice(f,3))
-                sample[m.name]={"head_first_three_lines":[x.decode("utf8",errors="replace")[:700] for x in first]}
+            if m.size>6*1024*1024:continue
+            data=tar.extractfile(m).read()
+            rendered=data.decode("utf8",errors="replace")
+            if any(w in rendered.upper() for w in ("SELECT","PREFIX","WHERE")):
+                sample[m.name]={"sha256":hashlib.sha256(data).hexdigest(),
+                    "select_occurrences":rendered.upper().count("SELECT"),
+                    "preview_first_1000_chars":rendered[:1000]}
+    unique_shas={v["sha256"] for v in sample.values()}
     return {"member_count":len(files),"largest_member_bytes":max((x["uncompressed_bytes"] for x in files),default=0),
-            "first_30_members":files[:30],"total_uncompressed_bytes":sum(x["uncompressed_bytes"] for x in files),
-            "query_file_count_with_select":len(sample) if type_name=="queries" else None,
+            "first_30_members":files[:30],
+            "total_uncompressed_bytes":sum(x["uncompressed_bytes"] for x in files),
+            "query_file_count_with_select":len(sample),
+            "distinct_exact_query_files_sha256":len(unique_shas),
             "sample_or_query_metadata":dict(list(sample.items())[:20])}
 
 def main():
