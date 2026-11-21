@@ -77,3 +77,24 @@ Two future worlds can share the exact same observed query history and then immed
 ### Next exact gate
 
 Do not use future labels to tune the method. Complete already started original raw-log STRICT algebra and graph predicate audit. If eligible, freeze policy before any original future query answers, select no-move vs matched byte-cap candidates, measure genuine four-indexed-TCP-worker complete original SPARQL correctness plus migration and day-cluster paired net including rollback/shadow; run the original author baseline on matched hardware/query set where its algorithm supports them. If raw log source becomes ineligible or RDF snapshot mismatch undermines causal claims, report BLOCKED and do not substitute simulated natural dates.
+
+## Completed official original 176-day STRICT algebra and graph-presence gate (after initial report)
+
+**SUCCESS, source-only** CI https://github.com/AiDevnew168/scale_rag/actions/runs/44907125997; frozen protocol commit `b70f5a1da34f263e7a31dbbff9923aa0d684cd47`. Full author raw 2014 SWDF archive and complete FEASIBLE RDF graph SHA verification passed.
+
+| Split on authentic UTC calendar days | Distinct days | Strict eligible original SELECT occurrences | Distinct exact query texts | Distinct predicate families |
+|---|---:|---:|---:|---:|
+| Training 2014-05-15 through 2014-08-10 | 88 | 4,707 | 973 | 188 |
+| Calibration 2014-08-11 through 2014-09-20 | 35 | 994 | 211 | 134 |
+| Heldout 2014-09-21 through 2014-11-12 | 53 | 1,441 | 253 | 145 |
+| Total occurrence pool | 176 | **7,142** | **1,082 unique overall** | not summed; shared families across periods |
+
+There are **80 test exact query texts absent from all pre-test** and **11 test predicate families absent from all pre-test**, besides 173 previously seen exact test texts. These are authentic original real dated requests, not queries synthesized from graph structure. `rdflib==7.5.0` strict original SELECT algebra includes static URI predicate BGP, 2–6 patterns, 2+ distinct source-graph predicates; all excluded unsupported queries are audited. No original future test *answer or timing* observed in source-eligibility.
+
+**Gate: PASS for pursuing a physically measured exploratory real-timestamp benchmark.** Original as-of-2014 RDF dataset snapshot compatibility remains **NOT VERIFIED**, so full causal paper-level source validity is still blocked.
+
+**Frozen plan before physical original test answer execution:** `CANDIDATE3_LOCKED_DATED_SWDF_PHYSICAL_SAMPLING_ADDENDUM_2026_11_21.md`, commit `d966551684f7d18eca4fab631c6706b97d5d1465`. Training 88 days; first 17 calibration days action-construction; final 18 calibration days admission evaluation; last53 days intact test. Deterministic ≤12 eligible original occurrences per day with source ordinal hashes, matched 4-indexed-worker SPARQL truth and semantic original SELECT contract, measured migration/replica cost, no move and equal-byte controls.
+
+Executable physical source: `candidate3_swdf_176day_physical_economic.py`; CI workflow `.github/workflows/candidate3_swdf_176day_physical_economic.yml`. **At this report write-time the full physical CI is in progress; do not call success or use its results until complete:** https://github.com/AiDevnew168/scale_rag/actions/runs/44908346611
+
+This full physical benchmark still is not a multi-host distributed optimizer, and the original published baseline DIAERESIS does not offer this identical migration action/policy. Neither economic nor paper superiority is established by passing eligibility.
