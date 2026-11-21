@@ -1,0 +1,30 @@
+name: Candidate3 original SWDF first24 TRAIN strong single-host indexed baseline
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_swdf_train24_central_indexed_baseline.yml'
+      - 'research/bridge_partition/candidate3_swdf_train24_central_indexed_baseline.py'
+  workflow_dispatch:
+jobs:
+  full-graph-indexed-oxigraph-original-source-select:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install identical original RDF parser and physical runner dependencies
+        run: pip install pyoxigraph==0.5.13 rdflib==7.5.0 gdown==5.2.0 remotezip==0.12.3
+      - name: Compile pinned centralized baseline
+        run: python -m py_compile research/bridge_partition/candidate3_swdf_train24_central_indexed_baseline.py
+      - name: Original frozen 24 training queries on full indexed central RDF store
+        run: python -u research/bridge_partition/candidate3_swdf_train24_central_indexed_baseline.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-original-SWDF-first24-central-indexed-strong-baseline
+          path: |
+            results_candidate3_original_SWDF_first24_train_central_indexed/report.json
+            results_candidate3_original_SWDF_first24_train_central_indexed/selection_frozen_before_centralized_timings.json
+          if-no-files-found: warn
