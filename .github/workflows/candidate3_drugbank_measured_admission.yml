@@ -1,0 +1,26 @@
+name: Candidate 3 fresh real DrugBank calibrated net economic abstention
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_drugbank_measured_admission.yml'
+      - 'research/bridge_partition/candidate3_drugbank_measured_admission.py'
+  workflow_dispatch:
+jobs:
+  bounded-real-RDF-zero-exception:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Pin new original real RDF source reader and exact SPARQL evaluation engines
+        run: pip install pyoxigraph==0.5.13 rdflib==7.5.0 remotezip==0.12.3 gdown==5.2.0
+      - name: Execute predeclared whole DrugBank source with frozen one-move vs no-move calibration-only economic decision
+        run: python -u research/bridge_partition/candidate3_drugbank_measured_admission.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-complete-new-DrugBank-RDF-measured-calibration-abstention
+          path: results_candidate3_drugbank_frozen_economic_admission/
+          if-no-files-found: error
