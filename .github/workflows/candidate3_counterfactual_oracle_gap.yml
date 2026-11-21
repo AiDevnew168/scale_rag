@@ -1,0 +1,18 @@
+name: Candidate 3 no-hindsight physical oracle gap verdict unit tests
+on:
+  push:
+    paths:
+      - 'research/bridge_partition/candidate3_counterfactual_oracle_gap.py'
+      - 'research/bridge_partition/test_candidate3_counterfactual_oracle_gap.py'
+      - '.github/workflows/candidate3_counterfactual_oracle_gap.yml'
+  workflow_dispatch:
+jobs:
+  synthetic-verdict-invariants:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m unittest research/bridge_partition/test_candidate3_counterfactual_oracle_gap.py -v
