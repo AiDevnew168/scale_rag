@@ -44,7 +44,7 @@ def _convert(term):
     if kind in ("NamedNode","URIRef"):return iri(getattr(term,"value",term))
     if kind in ("BlankNode","BNode"):return blank(getattr(term,"value",term))
     if kind=="Literal":
-        return literal(getattr(term,"value",str(term)),
+        return literal(str(term) if kind=="Literal" and term.__class__.__module__.startswith("rdflib") else getattr(term,"value",str(term)),
             getattr(term,"language",None),getattr(term,"datatype",None))
     raise Inconclusive("unsupported_rdf_term_type:"+kind)
 
@@ -85,7 +85,7 @@ def graph_of_answers(a):
             if term[0]=="uri":value=URIRef(term[1])
             elif term[0]=="literal":
                 value=Literal(term[1],lang=term[2] or None,
-                     datatype=URIRef(term[3]) if not term[2] else None)
+                     datatype=URIRef(term[3]) if not term[2] else None,normalize=False)
             else:
                 value=bnodes.setdefault(term[1],BNode("result_term_"+str(len(bnodes))))
             g.add((node,URIRef(BINDING+str(var)),value))
@@ -177,6 +177,7 @@ def query_contract(query):
     if not nodes or nodes.count("SelectQuery")!=1:
         raise Inconclusive("not_single_SELECT")
     allowed={"SelectQuery","Project","BGP","Slice","Distinct","Reduced"}
+    if "Reduced" in nodes:raise Inconclusive("REDUCED_solution_multiplicity_not_deterministic")
     if set(nodes)-allowed:raise Inconclusive("unsupported_algebra:"+",".join(sorted(set(nodes)-allowed)))
     if "Slice" not in nodes:return ("full",None,None)
     if nodes.count("Slice")!=1:raise Inconclusive("nested_or_multiple_slice")
