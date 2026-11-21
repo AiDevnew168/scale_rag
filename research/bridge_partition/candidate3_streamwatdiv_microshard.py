@@ -133,7 +133,7 @@ def main():
             event=json.loads(event_line)
             event_line_count+=1
             for triple in event.get("triples",[]):
-                lines.append(triple.encode("utf8")+b"\\n")
+                lines.append(triple.encode("utf8")+b"\n")
         raw=z.read("queries.sparql").decode("utf8")
     pred,siz,heavy,chunks,part,balances,cap,impossible=disk_layout(lines)
     query_lines=[x.strip() for x in raw.splitlines() if x.strip().startswith("SELECT")]
