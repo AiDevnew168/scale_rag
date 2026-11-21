@@ -1,0 +1,28 @@
+name: Candidate 3 real SWDF full source and no-leak query-family audit
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_swdf_locked_audit.yml'
+      - 'research/bridge_partition/candidate3_swdf_locked_audit.py'
+  workflow_dispatch:
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Pin parser and original dump client
+        run: pip install rdflib==7.5.0 gdown==5.2.0
+      - name: Hash source, parse strict SPARQL algebra, freeze disjoint family split without test scores
+        run: python -u research/bridge_partition/candidate3_swdf_locked_audit.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-locked-third-party-SWDF-source-splits
+          path: |
+            results_candidate3_SWDF_locked_audit/audit.json
+            results_candidate3_SWDF_locked_audit/locked_manifest.json
+          if-no-files-found: error
