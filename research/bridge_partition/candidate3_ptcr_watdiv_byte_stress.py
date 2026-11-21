@@ -42,6 +42,29 @@ def changes(rows,static,part):
       "distinct_patterns":len(cnt),
       "local_pct":round(100*sum(n*(new[p]==1) for p,n in cnt.items())/len(rows),3) if rows else None}
 
+def select_first_under_same_budget(original,weights,loads,cap,day0):
+    patterns=Counter(r["pattern"] for r in day0)
+    baseline={p:wd.span(original,p) for p in patterns}
+    available=sorted(p for p,loc in original.items() if len(loc)==1)
+    best=(0,None,None)
+    valid=0
+    for idx,p in enumerate(available):
+        for q in available[idx+1:]:
+            if original[p]==original[q]:continue
+            cost=weights[p]+weights[q]
+            if cost>BUDGET:continue
+            a=next(iter(original[p]));b=next(iter(original[q]))
+            if loads[a]-weights[p]+weights[q]>cap or loads[b]-weights[q]+weights[p]>cap:continue
+            valid+=1
+            moved,_,_=move(original,loads,weights,(p,q),cap)
+            gain=sum(n*(int(wd.span(moved,pat)==1)-int(baseline[pat]==1))
+                     for pat,n in patterns.items() if p in pat or q in pat)
+            rank=(gain,-cost)
+            if rank>best[:2]:
+                best=(gain,-cost,(p,q))
+    return best[2] if best[0]>0 else None,{"eligible_under_25MB":valid,
+        "selected_day0_local_gain":best[0],"selected_move_bytes":-best[1] if best[0]>0 else 0}
+
 def choose(static,one,loads,weights,cap,day0,previous,first_cost):
     # Previous traces are structurally disjoint from the original history set.
     # Both observed and previous are causally accessible for this pseudo-time.
@@ -125,9 +148,8 @@ def main():
         for a in ids:
             for b in ids:
                 if a!=b:assert not(ids[a]&ids[b])
-        first_candidates,baseline_search=wd.candidate(
+        pair,baseline_search=select_first_under_same_budget(
           original,weights,original_loads,cap,partition["current_day0"])
-        pair=first_candidates["head_local"]["decision"]["pair"]
         one,loads,first_cost=move(original,original_loads,weights,pair,cap)
         assert first_cost<=BUDGET
         chosen,detail=choose(original,one,loads,weights,cap,
