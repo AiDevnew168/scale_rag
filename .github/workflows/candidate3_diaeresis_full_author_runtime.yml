@@ -4,6 +4,8 @@ on:
     paths:
       - '.github/workflows/candidate3_diaeresis_full_author_runtime.yml'
       - 'research/bridge_partition/candidate3_diaeresis_full_author_runtime.py'
+      - 'research/bridge_partition/candidate3_diaeresis_same_source_oxigraph_check.py'
+      - 'research/bridge_partition/candidate3_diaeresis_strict_rdf_normalization.py'
   workflow_dispatch:
 jobs:
   author-original-all-three-stages:
