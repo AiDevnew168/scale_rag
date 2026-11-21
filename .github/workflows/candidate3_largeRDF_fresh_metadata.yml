@@ -1,0 +1,24 @@
+name: Candidate 3 frozen independent 2026 LargeRDFBench metadata eligibility
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_largeRDF_fresh_metadata.yml'
+      - 'research/bridge_partition/candidate3_largeRDF_fresh_metadata.py'
+  workflow_dispatch:
+jobs:
+  metadata-only-before-dataset:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Read only 2026 external source inventory, not future results
+        run: python -u research/bridge_partition/candidate3_largeRDF_fresh_metadata.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-fresh-LargeRDF-metadata-only
+          path: results_candidate3_external_largeRDF_preflight/report.json
+          if-no-files-found: error
