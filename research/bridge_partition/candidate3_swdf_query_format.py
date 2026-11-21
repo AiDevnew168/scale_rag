@@ -21,6 +21,7 @@ result={"schema":"candidate3-SWDF-unopened-query-prefix-format-v1",
     "n_whole_lines_in_first4kb":max(len(lines)-1,0),
     "line_preview_first_500":lines[0][:500] if lines else "",
     "line_2_preview_first_500":lines[1][:500] if len(lines)>1 else "",
+    "format_diagnostic_first_35_lines":[f"{i}: {line[:180]}" for i,line in enumerate(lines[:35])],
     "do_not_use_first_lines_as_independent_holdout":True,
     "rest_of_query_file_unread":True}
 OUT.joinpath("report.json").write_text(json.dumps(result,indent=2))
