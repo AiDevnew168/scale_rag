@@ -20,7 +20,9 @@ def rdflib_const(node):
         return ["iri", str(node)]
     if isinstance(node, RDFLiteral):
         return ["lit", str(node), (node.language or "").lower(),
-                str(node.datatype) if node.datatype else XSD_STRING]
+                str(node.datatype) if node.datatype else
+                ("http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"
+                 if node.language else XSD_STRING)]
     # Variables, blank-node syntax, or any other non-URI, nonliteral term
     # must never be treated as constants for conservative filtering.
     return None
