@@ -1,0 +1,18 @@
+name: Candidate 3 pre-result 24-query cluster sensitivity math invariants
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_trainonly_selective_cluster_sensitivity.yml'
+      - 'research/bridge_partition/candidate3_trainonly_selective_fetch_cluster_sensitivity.py'
+      - 'research/bridge_partition/test_candidate3_trainonly_selective_fetch_cluster_sensitivity.py'
+  workflow_dispatch:
+jobs:
+  training-only-synthetic-scoring:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m unittest research/bridge_partition/test_candidate3_trainonly_selective_fetch_cluster_sensitivity.py -v
