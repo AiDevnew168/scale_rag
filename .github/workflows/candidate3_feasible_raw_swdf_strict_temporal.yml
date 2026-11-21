@@ -1,0 +1,26 @@
+name: Candidate 3 authentic 176-day original SWDF SPARQL algebra and graph gate
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_feasible_raw_swdf_strict_temporal.yml'
+      - 'research/bridge_partition/candidate3_feasible_raw_swdf_strict_temporal.py'
+  workflow_dispatch:
+jobs:
+  strict-eligible-source-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Pin original source downloader and algebra-aware full SPARQL parser
+        run: pip install rdflib==7.5.0 gdown==5.2.0
+      - name: 176-day original SWDF query and matching RDF source eligibility WITHOUT executing future
+        run: python -u research/bridge_partition/candidate3_feasible_raw_swdf_strict_temporal.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-original-176day-SWDF-SPARQL-eligibility
+          path: results_candidate3_raw_swdf_strict_temporal/report.json
+          if-no-files-found: error
