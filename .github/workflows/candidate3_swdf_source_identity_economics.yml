@@ -1,0 +1,27 @@
+name: Candidate 3 blank-node-preserving SWDF full four-shard SPARQL repair
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_swdf_source_identity_economics.yml'
+      - 'research/bridge_partition/candidate3_swdf_source_identity_economics.py'
+      - 'research/bridge_partition/candidate3_source_identity_worker.py'
+  workflow_dispatch:
+jobs:
+  reproducible-source-identity-correctness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install exact independent RDF/SPARQL evaluator and provenance downloader
+        run: pip install pyoxigraph==0.5.13 rdflib==7.5.0 gdown==5.2.0
+      - name: Real four-process original SWDF queries and source-preserving physical moves
+        run: python -u research/bridge_partition/candidate3_swdf_source_identity_economics.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-SWDF-source-identity-economics
+          path: results_candidate3_swdf_identity_preserving/report.json
+          if-no-files-found: error
