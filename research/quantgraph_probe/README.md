@@ -16,6 +16,13 @@
 | [Chartography, 2026](https://arxiv.org/abs/2608.10677) | Professional chart benchmark; 51/100 tasks have expert-set answer ranges | Numeric ranges themselves ALREADY considered |
 | [ChartNet, CVPR 2026](https://huggingface.co/datasets/ibm-granite/ChartNet) | Real chart images + rendering code + data tables and disjoint human-reviewed evaluation subset | Candidate for real image/data supervision but original and permissive dataset versions have distinct licenses |
 
+## Additional direct prior-art falsifiers
+
+- [ChartRecover, Communications Engineering 2026](https://pmc.ncbi.nlm.nih.gov/articles/PMC13458524/) explicitly maps detected chart ticks/marks from pixel space into scientific numerical values and analyzes two distinct error types. **The axis-mapping portion of this branch is prior art, not a contribution.**
+- [Probabilistic Object Detection with Conformal Prediction, PMLR 2026](https://proceedings.mlr.press/v329/ries26a.html) constructs distribution-free marginal-coverage bounding-box coordinate intervals (with Bonferroni). **Conformal mark intervals or Bonferroni coverage cannot be claimed as novel.** This research was on object detection rather than end-to-end chart RAG, but transfer to charts is an obvious strong comparator.
+- [Chartography, 2026](https://arxiv.org/abs/2608.10677) defines expert acceptable ranges in 51 of 100 professional chart questions, so range-aware evaluation already exists.
+- **Conclusion:** only a *tested improvement in end-to-end numerical answer validity under original chart-document retrieval*, above best chart-extraction + standardized calibration baselines, could remain novel. We have no empirical evidence for such an improvement. An exact algebra kernel is an engineering prerequisite, not research evidence.
+
 ## Candidate that might still be differentiated (NOT established unsolved)
 
 For **retrieved** scientific document charts, use *actual externally validated uncertain mark localization* and axis calibration to derive a bounded source-evidence numerical claim. Preserve repeated-source dependencies and evaluate query-specific risk/coverage against a TFGR-grade table-first + calculator + calibrated abstention control.
