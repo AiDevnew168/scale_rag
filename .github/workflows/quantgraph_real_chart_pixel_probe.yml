@@ -1,0 +1,26 @@
+name: QuantGraph P0 original ChartQA PNG conditional pixel geometry smoke test
+on:
+  push:
+    paths:
+      - '.github/workflows/quantgraph_real_chart_pixel_probe.yml'
+      - 'research/quantgraph_p0/real_chart_pixel_probe.py'
+  workflow_dispatch:
+jobs:
+  exactly_one_original_png_not_a_benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Pin numerical and image tools
+        run: pip install numpy==2.3.5 scipy==1.17.0 Pillow==12.0.0
+      - name: Recover only the SHA-locked source image and measure blue curve pixels
+        run: python -u research/quantgraph_p0/real_chart_pixel_probe.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: quantgraph-P0-single-original-chart-pixel-evidence-smoke
+          path: results_quantgraph_p0/original_pixel_probe.json
+          if-no-files-found: warn
