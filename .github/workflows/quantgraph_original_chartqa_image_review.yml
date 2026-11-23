@@ -1,0 +1,42 @@
+name: QuantGraph P0 original public ChartQA chart-image evidence review only
+on:
+  push:
+    paths:
+      - '.github/workflows/quantgraph_original_chartqa_image_review.yml'
+  workflow_dispatch:
+jobs:
+  public_original_png_review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Acquire precisely two original chart PNGs without annotation or mutation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import urllib.request,hashlib,json
+          commit='044eabfc306abfe9340c5741f0093aefc5973d06'
+          output=Path('results_quantgraph_p0/public_original_image_review')
+          output.mkdir(parents=True,exist_ok=True)
+          evidence=[]
+          for name in ('4576.png','5734.png'):
+              url=f'https://raw.githubusercontent.com/vis-nlp/ChartQA/{commit}/ChartQA%20Dataset/val/png/{name}'
+              with urllib.request.urlopen(url,timeout=45) as response:
+                  raw=response.read(2000001)
+              if not raw.startswith(b'\x89PNG\r\n\x1a\n') or len(raw)>2000000:
+                  raise ValueError('Original public PNG source invalid')
+              (output/name).write_bytes(raw)
+              evidence.append({'original_image':name,'sha256':hashlib.sha256(raw).hexdigest(),
+                      'source_commit':commit,'original_image_data_unchanged':True,
+                      'original_public_source_url':url})
+          (output/'image_origin.json').write_text(json.dumps(evidence,indent=2))
+          print('ORIGINAL_CHARTQA_PNG_IDENTITY',json.dumps(evidence),flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: quantgraph-P0-two-original-ChartQA-pngs-for-image-adjudication
+          path: results_quantgraph_p0/public_original_image_review/
+          if-no-files-found: error
