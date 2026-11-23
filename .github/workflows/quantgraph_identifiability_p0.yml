@@ -1,0 +1,28 @@
+name: QuantGraph P0 adversarial coupled-axis numerics and frozen public data integrity
+on:
+  push:
+    paths:
+      - '.github/workflows/quantgraph_identifiability_p0.yml'
+      - 'research/quantgraph_p0/**'
+  workflow_dispatch:
+jobs:
+  hypothesis_falsification_not_paper_go:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Lock numerical LP and test environment
+        run: pip install numpy==2.3.5 scipy==1.17.0
+      - name: Reject unsupported, contradictory and uncertified source assumptions
+        run: python -m unittest discover -s research/quantgraph_p0 -p 'test_quantgraph_p0.py' -v
+      - name: Original public ChartQA source integrity checks only, NO model/answers evaluation
+        run: python -u research/quantgraph_p0/chartqa_source_audit.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: quantgraph-P0-original-public-source-metadata-audit
+          path: results_quantgraph_p0/source_audit.json
+          if-no-files-found: warn
