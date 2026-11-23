@@ -1,0 +1,34 @@
+name: Candidate3 independently audit original 48-train same-run physical artifact
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_swdf_train48_actual_artifact_verdict.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  scientific-verdict-on-real-not-synthetic-artifact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Retrieve immutable completed GitHub Actions artifact, never query text
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download 45106146288 --repo AiDevnew168/scale_rag --name candidate3-SWDF-48train-same-run-3arm-strong-central-baseline --dir original_artifact
+          sha256sum original_artifact/report.json original_artifact/protocol_frozen_before_new_same_run_answers.json
+      - name: Independent fail-closed audit on ACTUAL original physical result
+        run: |
+          python -m unittest research/bridge_partition/test_candidate3_swdf_train48_three_arm_independent_verdict.py -v
+          python research/bridge_partition/candidate3_swdf_train48_three_arm_independent_verdict.py original_artifact/report.json --output results_candidate3_train48_independent_artifact_audit/verdict.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-original-48train-actual-independent-evidence-verdict
+          path: results_candidate3_train48_independent_artifact_audit/verdict.json
+          if-no-files-found: warn
