@@ -1,0 +1,27 @@
+name: QuantGraph conditional numeric evidence soundness smoke test
+on:
+  push:
+    paths:
+      - 'research/quantgraph_probe/**'
+      - '.github/workflows/quantgraph_critical_math_probe.yml'
+  workflow_dispatch:
+jobs:
+  exact-math-not-paper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run strict conditional line-axis and dependency invariants (NOT RAG validation)
+        run: python -m unittest discover -s research/quantgraph_probe -p 'test_*.py' -v
+      - name: Enforce scope disclaimer and review requirements in branch
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('research/quantgraph_probe/README.md').read_text()
+          for required in ('NOT PAPER GO','TFGR','Chart-MRAG','NO-GO','externally validated','no original image'):
+              assert required.lower() in s.lower(), required
+          print('HYPOTHESIS_ONLY_FROZEN_NO_EMPIRICAL_CLAIMS')
+          PY
