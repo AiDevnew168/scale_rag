@@ -36,6 +36,10 @@ Precise scope: TWO independently uncertain axis ticks with measured pixel positi
 - Joint shared calibration bounds for A−B: [57.6,62.4], width 4.8, a 40% reduction **on this synthetic construction only**.
 - The intervals contain all 1,000 sampled feasible worlds in test, and 14/14 adversarial tests passed [CI 45114381392](https://github.com/AiDevnew168/scale_rag/actions/runs/45114381392).
 
+### Additional independent EXACT rational bound implementation
+
+To avoid mistaking floating-point numerical LP for a mathematical certificate, a second **standard-library-only** implementation now enumerates every feasible 2D affine calibration polytope vertex using `fractions.Fraction` and exactly bounds linear mark expressions after choosing extremal permissible pixel endpoints. This is exact for the finite, bounded, affine input model with **guaranteed tick orientation** and trusted rational data; it is not a proof the chart images actually satisfy those inputs. Code: `exact_affine.py` with nine adversarial tests in `test_exact_affine.py`; [independent CI run 45115023600](https://github.com/AiDevnew168/scale_rag/actions/runs/45115023600) **9/9 PASS**, including 10,000 random rational sampled worlds and the original chart conditional interval. Toy bounds reproduced exactly as `288/5` and `312/5`. This mathematics is known convex/rational optimization, **not an original theorem**. A trusted-source flag cannot authenticate the image without independent image provenance and annotation adjudication.
+
 ## 3. Original unmodified real public chart checks
 
 - [vis-nlp/ChartQA source commit 044eabfc306abfe9340c5741f0093aefc5973d06](https://github.com/vis-nlp/ChartQA/tree/044eabfc306abfe9340c5741f0093aefc5973d06/ChartQA%20Dataset/val). Original PNGs obtained in [CI 45114472338](https://github.com/AiDevnew168/scale_rag/actions/runs/45114472338), image bytes kept only in original GitHub Actions artifact for human review; images not copied into repository.
@@ -60,5 +64,7 @@ Precise scope: TWO independently uncertain axis ticks with measured pixel positi
 3. Select ~100 never-consulted charts across document/source clusters (at least ~30 numerical relational and uncertainty-sensitive), score *end-to-end answered correctness plus risk/coverage*, exact chart-grounded evidence, semantic answerability, numeric interval coverage with visible human annotation; independently adjudicate ambiguous cases. No filtering failed examples after outcomes; preregister metric and failure gate.
 4. A nontrivial precommitted minimum e.g. >=8 percentage point absolute answered-and-correct increase at matched coverage plus lower false-confident answers, **before** out-of-source final test; after failure STOP the path rather than add complex modules or change objective.
 5. The research contribution must include an independently verified property NOT already offered by exact chart digitization, ordinary LP or standard uncertainty propagation. Neither the P0 code nor the literature review proves that property.
+
+**New research 2026 overlap:** [ChartAgent, ACL 2026](https://aclanthology.org/2026.acl-long.843/) and [Chart-RVR, EMNLP Findings 2026](https://aclanthology.org/2026.findings-emnlp.691/) are mandatory direct comparisons, not optional citations. Their visual subtask tooling and structured evidence/calculation trace further rule out generic 'visual agent plus program' novelty.
 
 **Decision:** implementation and source read integrity P0 = PASS; actual multimodal RAG performance = NOT TESTED; advantage over competitive baseline = NOT TESTED; mathematical novelty = UNPROVEN; high-impact journal candidacy = NO-GO for now. The result should be saved as a negative/conditional proof, not portrayed as a promising publication-level breakthrough.
