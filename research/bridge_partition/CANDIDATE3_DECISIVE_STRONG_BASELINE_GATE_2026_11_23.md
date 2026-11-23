@@ -16,6 +16,12 @@
 | Deterministic single-worker source fragment | 6,710,184 original bytes -> 162 selected bytes; first filtered RPC 258.374ms, warm filtered median 13.580ms, full RPC median 4.009ms; VmRSS +26,528 KiB | Byte reduction is not sufficient for worker-side latency or RAM benefit |
 | Direct strong central indexed baseline, same first24 original texts x2 | 48/48 original SELECT executed. Mean 2.390744ms, empirical p95 17.302014ms. Source index build 638.296ms. | **Strong single-host disconfirmation** of four-worker approach for this 304,592-triple source graph, though comparison against prior runs is unpaired |
 
+## Cross-artifact independent raw-row reconciliation
+
+An independent offline extraction of the *two original action artifact JSONs*, rather than copying GitHub's short console summaries, recomputed the first cohort full 48 paired mean 155.08208958ms vs selective 93.63118333ms, second cohort 117.95104375ms vs selective 64.93353958ms, 47/48 positive per cohort, and **zero overlapping query-text SHA hashes** between cohorts. The second group had one negative outlier; no data deletion was made.
+
+The central-indexed original first24 artifact has the **same exact set of 24 SHA query texts** as the first full/selective artifact. For each query text, comparing the separately executed two-repetition means, indexed central is faster in **24/24**, with the *smallest* central advantage >50.5ms. This is an unpaired, runner-session-different architecture diagnostic; no within-request randomized causal claim or independent population sign-test p-value is justified. First24 has only 7 predicate-set families, with 19/24 text examples concentrated in the first two families.
+
 ## The true fair control
 
 The earlier 61.45ms is against four workers that ship complete predicate fragments into a fresh per-query coordinator store; it cannot be compared to a strong persistent SPARQL index as evidence of a better distributed engine. A direct centralized store does not pay cross-process TCP, fragment extraction, per-request graph rebuild, or separate worker cache. The 304,592-triple graph fits on one runner. Complexity of four workers is a LIABILITY without a demonstrated scalability or isolation requirement.
