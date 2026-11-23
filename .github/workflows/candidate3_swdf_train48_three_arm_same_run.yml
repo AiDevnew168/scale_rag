@@ -1,0 +1,33 @@
+name: Candidate3 48 original SWDF TRAIN text same-run indexed-central vs four-worker full/selective
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_swdf_train48_three_arm_same_run.yml'
+      - 'research/bridge_partition/candidate3_swdf_train48_three_arm_same_run.py'
+      - 'research/bridge_partition/test_candidate3_swdf_train48_three_arm_same_run.py'
+  workflow_dispatch:
+jobs:
+  matched-central-vs-coordinator-falsification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install exact original RDF source dependencies and pinned engine versions
+        run: pip install pyoxigraph==0.5.13 rdflib==7.5.0 gdown==5.2.0 remotezip==0.12.3
+      - name: Fast no-source structural, balanced-order and physical semantics tests
+        run: |
+          python -m py_compile research/bridge_partition/candidate3_swdf_train48_three_arm_same_run.py
+          python -m unittest research/bridge_partition/test_candidate3_swdf_train48_three_arm_same_run.py research/bridge_partition/test_candidate3_selective_fetch_transport.py research/bridge_partition/test_candidate3_selective_http_semantic_fixture.py -v
+      - name: Immutable original 48 TRAIN-only texts, three arms interleaved and fully certified
+        run: python -u research/bridge_partition/candidate3_swdf_train48_three_arm_same_run.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate3-SWDF-48train-same-run-3arm-strong-central-baseline
+          path: |
+            results_candidate3_SWDF_train48_same_runner_three_arm/report.json
+            results_candidate3_SWDF_train48_same_runner_three_arm/protocol_frozen_before_new_same_run_answers.json
+          if-no-files-found: warn
