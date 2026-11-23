@@ -1,0 +1,19 @@
+name: Candidate3 independent 432-execution 3-arm SPARQL and performance audit invariants
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate3_swdf_train48_three_arm_independent_verdict.yml'
+      - 'research/bridge_partition/candidate3_swdf_train48_three_arm_independent_verdict.py'
+      - 'research/bridge_partition/test_candidate3_swdf_train48_three_arm_independent_verdict.py'
+  workflow_dispatch:
+jobs:
+  fail-closed-proof-before-metric:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Ten adversarial completely offline no-test-leak strict-gate checks
+        run: python -m unittest research/bridge_partition/test_candidate3_swdf_train48_three_arm_independent_verdict.py -v
